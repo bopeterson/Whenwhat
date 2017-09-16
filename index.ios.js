@@ -17,10 +17,15 @@ import {
   AlertIOS,
   TextInput,
   Keyboard,
+  Animated,
+  Dimensions,
+  TouchableOpacity,
 } from 'react-native';
 
 import DatePicker from 'react-native-datepicker'
 
+
+//har nu lagt på github
 
 //https://facebook.github.io/react-native/releases/0.27/docs/datepickerios.html
 //<DatePickerIOS></DatePickerIOS>
@@ -38,12 +43,27 @@ export default class Whenwhat extends Component {
     this.state={
       text:'',logtext:'What',
       date: new Date(),
+      overlayShow: false,
     };
     this.handlePress=this.handlePress.bind(this);
     this.onDateChange=this.onDateChange.bind(this);
+    this.openOverlay = this.openOverlay.bind(this);
+    this.closeOverlay = this.closeOverlay.bind(this);
 
 //    this.hideKeyboard = this.hideKeyboard.bind(this)
   }
+  
+
+  openOverlay() {
+    this.setState({ overlayShow: true });
+  }
+
+  closeOverlay() {
+    this.setState({ overlayShow: false });
+  }
+  
+  
+  
   
   onDateChange(date) {
     this.setState({date: date});
@@ -73,13 +93,19 @@ export default class Whenwhat extends Component {
     */
   }
   
+  // i textinput
+  //onFocus={()=>this.setState({buttonOpacity:0.1})}
+                
+  
   render() {
     return (
       <View style={styles.container}>
         <View style={styles.subContainer}>
+      
           <View style={styles.x1}>
+      
             <Text>{this.state.logtext}</Text>
-            <TouchableHighlight>
+            <TouchableHighlight onPress={this.openOverlay}>
               <Text>follow up</Text>
             </TouchableHighlight>
           </View>
@@ -88,16 +114,15 @@ export default class Whenwhat extends Component {
                 style={{height: 40, borderColor: 'gray', borderWidth: 1}}
                 onChangeText={(text) => this.setState({text})}
                 onBlur={()=>this.setState({buttonOpacity:1.0})}
-                onFocus={()=>this.setState({buttonOpacity:0.1})}
+                onFocus={()=>this.openOverlay()}
                 value={this.state.text}
                 placeholder={'enter subject here'}
                 ref={instance => { this._textInput = instance; }}
               />
             </View>
+
           <View style={styles.x}>
               <Text>When</Text>
-
-            
           </View>
           <View style={styles.z}>
             <View style={[styles.buttonRow,{opacity:this.state.buttonOpacity}]}>
@@ -189,8 +214,19 @@ export default class Whenwhat extends Component {
                 <Text style={{textAlign:'center',}}>custom</Text>
               </TouchableHighlight>*/}
             </View>
+                
+          <AnimatedOverlay
+                backgroundColor={'black'}
+                opacity={0.5}
+                onPress={this.closeOverlay}
+                overlayShow={this.state.overlayShow}
+          />
+                
+                
+                
           </View>
           <View style={styles.x1}>
+            
             <TouchableHighlight>
               <Text>kugghjul</Text>
             </TouchableHighlight>
@@ -198,9 +234,14 @@ export default class Whenwhat extends Component {
               <Text> i </Text>
             </TouchableHighlight>
           </View>
-               
-                
+
+
         </View>
+                
+                
+                
+                
+                
       </View>
     );
   }
@@ -286,6 +327,111 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     margin: 10,
   },
+  
+  overlay: { //should go in separate overaly file
+    flex: 1,
+    top: 0,
+    left: 0,
+    position: 'absolute',
+  },  
+  
 });
 
 AppRegistry.registerComponent('Whenwhat', () => Whenwhat);
+
+//should go in separate overaly file
+class AnimatedOverlay extends Component {
+  props: {
+    onPress?: () => void;
+    backgroundColor?: string;
+    opacity?: number;
+    duration?: number;
+    overlayShow?: boolean;
+    pointerEvents?: string;
+    initValue?: number;
+    onAnimationFinished?: (value: number) => void;
+    style?: any;
+    useNativeDriver: boolean;
+    children?: any;
+  }
+
+  static defaultProps = {
+    onPress: () => {},
+    pointerEvents: null,
+    backgroundColor: '#000',
+    opacity: 0.5,
+    duration: 300,
+    overlayShow: false,
+    initValue: 0,
+    onAnimationFinished: () => {},
+    style: null,
+    useNativeDriver: false,
+    children: null,
+  }
+
+  constructor(props) {
+    super(props);
+
+    this.state = {
+      opacity: new Animated.Value(props.initValue),
+      overlayShow: props.overlayShow,
+    };
+  }
+
+  componentDidMount() {
+    this.doAnimation();
+  }
+
+  componentWillReceiveProps(nextProps) {
+    if (this.props.overlayShow !== nextProps.overlayShow) {
+      this.setState({ overlayShow: nextProps.overlayShow });
+    }
+  }
+
+  componentDidUpdate() {
+    this.doAnimation();
+  }
+
+  doAnimation() {
+    const {
+      overlayShow,
+      opacity,
+      duration,
+      onAnimationFinished,
+      useNativeDriver,
+    } = this.props;
+
+    const toValue = overlayShow ? opacity : 0;
+    Animated.timing(this.state.opacity, {
+      toValue,
+      duration,
+      useNativeDriver,
+    }).start(() => {
+      onAnimationFinished(toValue);
+    });
+  }
+
+  render() {
+    let { pointerEvents } = this.props;
+    const { onPress, style, children } = this.props;
+    const backgroundColor = { backgroundColor: this.props.backgroundColor };
+    const opacity = { opacity: this.state.opacity };
+    const size = {
+      width: Dimensions.get('window').width,
+      height: Dimensions.get('window').height
+    };
+
+    if (!pointerEvents) pointerEvents = this.state.overlayShow ? 'auto' : 'none';
+
+    return (
+      <Animated.View
+        pointerEvents={pointerEvents}
+        style={[styles.overlay, backgroundColor, size, style, opacity]}
+      >
+        <TouchableOpacity onPress={onPress} style={[styles.overlay, size]} />
+        {children}
+      </Animated.View>
+    );
+  }
+}
+
