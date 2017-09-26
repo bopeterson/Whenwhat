@@ -5,7 +5,115 @@
  */
 
 
+
+/*
+Mailer.mail({
+      subject: 'need help',
+      recipients: ['bo.peterson@mah.se'],
+      body: 'Some text',
+      isHTML: true,
+    }, (error, event) => {
+        if(error) {
+          AlertIOS.alert('Error', 'Could not send mail. Please send a mail to support@example.com');
+        }
+    });
+*/
+
+
+
 //xxx make sure to check xxx in datepicker/index.js and datepicker/style.js
+//från objective c-appen:
+/*
+    unitsSingular=[NSArray arrayWithObjects:@"minute",@"hour",@"day",@"week",@"month",@"year", nil];
+    unitsPlural=[NSArray arrayWithObjects:@"minutes",@"hours",@"days",@"weeks",@"months",@"years", nil];
+    UIColor *lightorange=[UIColor colorWithRed:254.0/255.0 green:179.0/255.0 blue:110.0/255.0 alpha:1]; '#FEB36E', //ligth orange
+
+- (IBAction)digitButtonTouchUpInside:(id)sender{
+    //set digit to zero if day or custom was selected right before. otherwise old digit would be concatenated to pressed digit
+    if (selectedCategory!=DIGITUNIT) {
+        selectedDigit=0;
+    }
+    
+    selectedCategory=DIGITUNIT;
+
+    if (selectedDigit<100) {
+        selectedDigit=selectedDigit*10+([sender tag]-digitOffset);
+        [self prettyPrint];
+    }
+    if (selectedDigit!=1) {
+        [self setUnitLabelsPlural];
+    }
+    else {
+        [self setUnitLabelsSingular];
+    }
+
+- (IBAction)backButtonTouchUpInside:(id)sender {
+    if (selectedCategory==DIGITUNIT) {
+        selectedDigit=selectedDigit/10;
+
+- (IBAction)dayButtonTouchUpInside:(id)sender {
+    selectedCategory=DAY;
+    selectedDay=[sender tag];
+
+- (void) prettyPrint {
+    
+    if (selectedCategory==DIGITUNIT) {
+        [self outputLines:1];
+        //first priority
+        //step 1: prettyTime
+        if (selectedDigit!=1) {
+            if (selectedDigit==0 && (selectedUnit-unitOffset)==0) {
+                //0 minutes actually translates to 1 hour by followupthen, so if 0 minutes is intended to mean "now" it wont work
+                prettyTime=@"now";
+            } else {
+                prettyTime=[NSString stringWithFormat:@"%i %@",selectedDigit,[unitsPlural objectAtIndex:selectedUnit-unitOffset]];
+            }
+        } else {
+            prettyTime=[NSString stringWithFormat:@"%i %@",selectedDigit,[unitsSingular objectAtIndex:selectedUnit-unitOffset]];
+        }
+        //step 2: formalTime
+        if (selectedDigit!=1) {
+            if (selectedDigit==0 && (selectedUnit-unitOffset)==0) {
+                //0 minutes actually translates to 1 hour, so if 0 minutes is intended to mean "now" it wont work
+                formalTime=[NSString stringWithFormat:@"%i%@",1,[unitsSingular objectAtIndex:selectedUnit-unitOffset]];
+            } else {
+                formalTime=[NSString stringWithFormat:@"%i%@",selectedDigit,[unitsPlural objectAtIndex:selectedUnit-unitOffset]];
+            }
+        } else {
+            formalTime=[NSString stringWithFormat:@"%i%@",selectedDigit,[unitsSingular objectAtIndex:selectedUnit-unitOffset]];
+        }
+    } else if (selectedCategory==CUSTOM) {
+        [self outputLines:2];
+        //second priority
+        //step 1: prettyTime
+        prettyTime=[self formatPrettyTime:selectedDate];
+        //step 2: formalTime
+        formalTime=[self formatFormalTime:selectedDate];
+    } else if (selectedCategory==DAY) {
+        [self outputLines:1];
+        prettyTime=[days objectAtIndex:selectedDay-dayOffset];
+        formalTime=[days objectAtIndex:selectedDay-dayOffset];
+    } else {
+        [self outputLines:1];
+        //step 1: prettyTime
+        prettyTime=@"?";
+        //step 2: formalTime
+        formalTime=@"notvalid";
+    }
+    [digitlabelOutlet setText:prettyTime];
+}
+*/
+
+/*
+vilka states?
+
+selectedDigit
+selectedCategory
+selectedDay
+selectedUnit
+*/
+
+
 
 import React, { Component } from 'react';
 import {
@@ -24,8 +132,7 @@ import {
 
 import DatePicker from 'react-native-datepicker'
 
-
-//har nu lagt på github
+import Moment from 'moment';
 
 //https://facebook.github.io/react-native/releases/0.27/docs/datepickerios.html
 //<DatePickerIOS></DatePickerIOS>
@@ -41,11 +148,19 @@ export default class Whenwhat extends Component {
   constructor(props) {
     super(props);
     this.state={
-      text:'',logtext:'What',
-      date: new Date(),
+      text:'',logtext:Dimensions.get('window').width,
+      digit: 0,
+      category: 'DIGITUNIT',
+      day: 0,
+      unit: 0,
+      date: Moment().format('YYYY-MM-DD HH:mm'), //new Date(),
       overlayShow: false,
     };
-    this.handlePress=this.handlePress.bind(this);
+    this.handleDigitPress=this.handleDigitPress.bind(this);
+    this.handleUnitPress=this.handleUnitPress.bind(this);
+    this.handleDayPress=this.handleDayPress.bind(this);
+    this.handleTomorrowPress=this.handleTomorrowPress.bind(this);
+    this.handleBackPress=this.handleBackPress.bind(this);
     this.onDateChange=this.onDateChange.bind(this);
     this.openOverlay = this.openOverlay.bind(this);
     this.closeOverlay = this.closeOverlay.bind(this);
@@ -59,39 +174,38 @@ export default class Whenwhat extends Component {
   }
 
   closeOverlay() {
+    if (this._textInput.isFocused()) {
+      Keyboard.dismiss(); //detta funkar inte rakt av, 
+      this.setState({logtext:'dismissing'});
+    }
     this.setState({ overlayShow: false });
   }
-  
-  
-  
   
   onDateChange(date) {
     this.setState({date: date});
   }
   
-  handlePress(e,i) {
-    if (this._textInput.isFocused()) {
-      Keyboard.dismiss(); //detta funkar inte rakt av, 
-      this.setState({logtext:'dismissing'});
-        
-    } else {
+  handleDigitPress(e,i) {
       this.setState({logtext:i});
-      
-    }
-
-    /*
-    Mailer.mail({
-          subject: 'need help',
-          recipients: ['bo.peterson@mah.se'],
-          body: 'Some text',
-          isHTML: true,
-        }, (error, event) => {
-            if(error) {
-              AlertIOS.alert('Error', 'Could not send mail. Please send a mail to support@example.com');
-            }
-        });
-    */
   }
+
+  handleUnitPress(e,i) {
+      this.setState({logtext:i});
+  }
+
+
+  handleDayPress(e,i) {
+      this.setState({logtext:i});
+  }
+
+  handleTomorrowPress(e,i) {
+      this.setState({logtext:i});
+  }
+
+  handleBackPress(e,i) {
+      this.setState({logtext:i});
+  }
+
   
   // i textinput
   //onFocus={()=>this.setState({buttonOpacity:0.1})}
@@ -105,7 +219,8 @@ export default class Whenwhat extends Component {
           <View style={styles.x1}>
       
             <Text>{this.state.logtext}</Text>
-            <TouchableHighlight onPress={this.openOverlay}>
+            
+            <TouchableHighlight>
               <Text>follow up</Text>
             </TouchableHighlight>
           </View>
@@ -113,111 +228,87 @@ export default class Whenwhat extends Component {
               <TextInput
                 style={{height: 40, borderColor: 'gray', borderWidth: 1}}
                 onChangeText={(text) => this.setState({text})}
-                onBlur={()=>this.setState({buttonOpacity:1.0})}
+                onBlur={()=>this.closeOverlay()}
                 onFocus={()=>this.openOverlay()}
                 value={this.state.text}
                 placeholder={'enter subject here'}
                 ref={instance => { this._textInput = instance; }}
               />
             </View>
-
-          <View style={styles.x}>
+            <View style={styles.x}>
+          
+            <TouchableHighlight>
               <Text>When</Text>
-          </View>
+                
+            </TouchableHighlight>
+          <AnimatedOverlay
+                backgroundColor={'white'}
+                opacity={0.9}
+                onPress={this.closeOverlay}
+                overlayShow={this.state.overlayShow}
+          />
+                
+            </View>
           <View style={styles.z}>
-            <View style={[styles.buttonRow,{opacity:this.state.buttonOpacity}]}>
-                <TouchableHighlight style={styles.button1} onPress={(e,i) => this.handlePress(e,1)} underlayColor={'#FFFFFF'} activeOpacity={0.5}>
-                <Text style={{textAlign:'center',}}>1</Text>
-              </TouchableHighlight>
-              <TouchableHighlight style={styles.button1} onPress={(e,i) => this.handlePress(e,2)} underlayColor={'#FFFFFF'} activeOpacity={0.5}>
-                <Text style={{textAlign:'center',}}>2</Text>
-              </TouchableHighlight>
-              <View style={styles.button}>
-              </View>
+            <View style={[styles.buttonRow]}>
+              <WWButton slots={1} lineRight={true} text={1} textStyle={styles.buttonText} onPress={(e,i) => this.handleDigitPress(e,1)} />
+              <WWButton slots={1} lineRight={true} text={2} textStyle={styles.buttonText} onPress={(e,i) => this.handleDigitPress(e,2)} />
+              <WWButton slots={1} lineRight={true} text={3} textStyle={styles.buttonText} onPress={(e,i) => this.handleDigitPress(e,3)} />
               <View style={styles.button2}>
-                <Text>{JSON.stringify(this.state.date)}</Text>
+                <Text>{this.state.date}</Text>
               </View>
             </View>
-            <View style={[styles.buttonRow,{opacity:this.state.buttonOpacity}]}>
+            <View style={[styles.buttonRow]}>
+              <WWButton slots={1} lineRight={true} text={4} textStyle={styles.buttonText} onPress={(e,i) => this.handleDigitPress(e,4)} />
+              <WWButton slots={1} lineRight={true} text={5} textStyle={styles.buttonText} onPress={(e,i) => this.handleDigitPress(e,5)} />
+              <WWButton slots={1} lineRight={true} text={6} textStyle={styles.buttonText} onPress={(e,i) => this.handleDigitPress(e,6)} />
+              <WWButton slots={1} lineRight={true} text={'minutes'} textStyle={styles.buttonText} onPress={(e,i) => this.handleUnitPress(e,0)} />
+              <WWButton slots={1} lineRight={false} text={'hours'} textStyle={styles.buttonText} onPress={(e,i) => this.handleUnitPress(e,1)} />
+            </View>
+            <View style={[styles.buttonRow]}>
+              <WWButton slots={1} lineRight={true} text={7} textStyle={styles.buttonText} onPress={(e,i) => this.handleDigitPress(e,7)} />
+              <WWButton slots={1} lineRight={true} text={8} textStyle={styles.buttonText} onPress={(e,i) => this.handleDigitPress(e,8)} />
+              <WWButton slots={1} lineRight={true} text={9} textStyle={styles.buttonText} onPress={(e,i) => this.handleDigitPress(e,9)} />
+              <WWButton slots={1} lineRight={true} text={'days'} textStyle={styles.buttonText} onPress={(e,i) => this.handleUnitPress(e,2)} />
+              <WWButton slots={1} lineRight={false} text={'weeks'} textStyle={styles.buttonText} onPress={(e,i) => this.handleUnitPress(e,3)} />
+
+            </View>
+            <View style={[styles.buttonRow]}>
+              <WWButton slots={2} lineRight={true} text={0} textStyle={styles.buttonText} onPress={(e,i) => this.handleDigitPress(e,0)} />
+              <WWButton slots={1} lineRight={true} text={'<'} textStyle={styles.buttonText} onPress={(e,i) => this.handleBackPress(e,0)} />
+              <WWButton slots={1} lineRight={true} text={'months'} textStyle={styles.buttonText} onPress={(e,i) => this.handleUnitPress(e,2)} />
+              <WWButton slots={1} lineRight={false} text={'years'} textStyle={styles.buttonText} onPress={(e,i) => this.handleUnitPress(e,3)} />
+            </View>
+            <View style={[styles.buttonRow]}>
+                <WWButton slots={1} lineRight={true} text={'mon'} textStyle={styles.buttonText} onPress={(e,i) => this.handleDayPress(e,0)} />
+                <WWButton slots={1} lineRight={true} text={'tue'} textStyle={styles.buttonText} onPress={(e,i) => this.handleDayPress(e,1)} />
+                <WWButton slots={1} lineRight={true} text={'wed'} textStyle={styles.buttonText} onPress={(e,i) => this.handleDayPress(e,2)} />
+                <WWButton slots={1} lineRight={true} text={'thu'} textStyle={styles.buttonText} onPress={(e,i) => this.handleDayPress(e,3)} />
+                <WWButton slots={1} lineRight={false} text={'fri'} textStyle={styles.buttonText} onPress={(e,i) => this.handleDayPress(e,4)} />
+            </View>
+            <View style={[styles.buttonRow]}>
+              <WWButton slots={1} lineRight={true} text={'sat'} textStyle={styles.buttonText} onPress={(e,i) => this.handleDayPress(e,5)} />
+              <WWButton slots={1} lineRight={true} text={'sun'} textStyle={styles.buttonText} onPress={(e,i) => this.handleDayPress(e,6)} />
+              <WWButton slots={2} lineRight={true} text={'tomorrow'} textStyle={styles.buttonText} onPress={(e,i) => this.handleTomorrowPress(e,6)} />
               <DatePicker
-                style={styles.button1}
+                style={[{flex:1}, styles.button]}
                 date={this.state.date}
-                mode="date"
-                placeholder="temp"
-                format="YYYY-MM-DD"
-                onDateChange={this.onDateChange}
-              />
-              <View style={styles.button}>
-              </View>
-              <View style={styles.button}>
-              </View>
-              <View style={styles.button}>
-              </View>
-              <View style={styles.button}>
-              </View>
-            </View>
-            <View style={[styles.buttonRow,{opacity:this.state.buttonOpacity}]}>
-              <View style={styles.button}>
-              </View>
-              <View style={styles.button}>
-              </View>
-              <View style={styles.button}>
-              </View>
-              <View style={styles.button}>
-              </View>
-              <View style={styles.button}>
-              </View>
-            </View>
-            <View style={[styles.buttonRow,{opacity:this.state.buttonOpacity}]}>
-              <TouchableHighlight style={styles.button2} onPress={(e,i) => this.handlePress(e,0)} underlayColor={'#FFFFFF'} activeOpacity={0.5}>
-                <Text style={{textAlign:'center',}}>0</Text>
-              </TouchableHighlight>
-              <View style={styles.button}>
-              </View>
-              <View style={styles.button}>
-              </View>
-              <View style={styles.button}>
-              </View>
-            </View>
-            <View style={[styles.buttonRow,{opacity:this.state.buttonOpacity}]}>
-              <View style={styles.button}>
-              </View>
-              <View style={styles.button}>
-              </View>
-              <View style={styles.button}>
-              </View>
-              <View style={styles.button}>
-              </View>
-              <View style={styles.button}>
-              </View>
-            </View>
-            <View style={[styles.buttonRow,{opacity:this.state.buttonOpacity}]}>
-              <View style={styles.button}>
-              </View>
-              <View style={styles.button}>
-              </View>
-              <View style={styles.button2}>
-              </View>
-              <DatePicker
-                style={styles.button1}
-                date={this.state.date}
-                mode="date"
+                mode="datetime"
                 placeholder="custom"
-                format="YYYY-MM-DD"
+                format="YYYY-MM-DD HH:mm"
                 onDateChange={this.onDateChange}
               />
                   
                 
                 
                 
-                {/*<TouchableHighlight style={styles.button1} onPress={(e,i) => this.handlePress(e,'custom')}>
-                <Text style={{textAlign:'center',}}>custom</Text>
-              </TouchableHighlight>*/}
+
             </View>
                 
+          
           <AnimatedOverlay
-                backgroundColor={'black'}
-                opacity={0.5}
+                backgroundColor={'white'}
+                opacity={0.9}
                 onPress={this.closeOverlay}
                 overlayShow={this.state.overlayShow}
           />
@@ -230,9 +321,17 @@ export default class Whenwhat extends Component {
             <TouchableHighlight>
               <Text>kugghjul</Text>
             </TouchableHighlight>
+                
             <TouchableHighlight>
               <Text> i </Text>
             </TouchableHighlight>
+          <AnimatedOverlay
+                backgroundColor={'white'}
+                opacity={0.9}
+                onPress={this.closeOverlay}
+                overlayShow={this.state.overlayShow}
+          />
+                
           </View>
 
 
@@ -250,20 +349,30 @@ export default class Whenwhat extends Component {
 const styles = StyleSheet.create({
   
   buttonRow: {
-    flex:1,
+    //flex:1,
+    height:Math.floor((Dimensions.get('window').height-24)/6/2+0.99),
     flexDirection:'row',
     margin:0,
     backgroundColor:'white',
   },
+
+  buttonText: {
+    color: 'orange',
+    fontSize: 16,
+    //textAlign:'content', //doesn't make any difference
+  },
+  
   
   button: {
-    flex:1,
-    marginRight:1,
-    marginBottom:1,
-    backgroundColor:'lightyellow',
+    alignItems:'center',
+    justifyContent: 'center',
+    //marginRight:1,
+    borderTopWidth:StyleSheet.hairlineWidth,
+    backgroundColor:'white',
+    borderColor: 'orange',
   },
+
   button1: {
-    //opacity:1,
     flex:1,
     alignItems:'center',
     justifyContent: 'center',
@@ -284,7 +393,7 @@ const styles = StyleSheet.create({
 
   x1: {
     flex:0.09,
-    backgroundColor:'skyblue',
+    backgroundColor:'red',
     flexDirection: 'row',
     justifyContent: 'space-between',
   },
@@ -292,15 +401,15 @@ const styles = StyleSheet.create({
   
   x: {
     flex:0.09,
-    backgroundColor:'skyblue',
+    backgroundColor:'yellow',
   },
   y: {
     flex:0.07,
-    backgroundColor:'lightblue',
+    backgroundColor:'green',
   },
   z: {
     flex:0.5,
-    backgroundColor:'white',
+    backgroundColor:'blue',
   },
   
   
@@ -312,14 +421,14 @@ const styles = StyleSheet.create({
     //alignItems: 'center',
 
 
-    backgroundColor:'lightyellow',
+    backgroundColor:'purple',
   },
   
   subContainer: {//adjust for status bar on
     flex:1,
     //alignItems:'center',
     marginTop:24, //Environment.statusBarHeight, 
-    backgroundColor:'steelblue',
+    backgroundColor:'orange',
   },  
   
   welcome: {
@@ -338,6 +447,34 @@ const styles = StyleSheet.create({
 });
 
 AppRegistry.registerComponent('Whenwhat', () => Whenwhat);
+
+
+
+class WWButton extends Component {
+//flex:this.props.slots
+    
+  
+  render() {
+    let width=this.props.slots*Math.floor(Dimensions.get('window').width/5+0.99);
+    let height=Math.floor((Dimensions.get('window').height-24)/6/2);
+
+    if (this.props.lineRight) {
+      //width=width-10;
+      borderRightWidth=StyleSheet.hairlineWidth; //eller 1
+    } else {
+      borderRightWidth=0;
+    }
+
+    return (
+                <TouchableHighlight style={[{width:width,borderRightWidth:borderRightWidth},styles.button]} onPress={this.props.onPress} underlayColor={'#FFFFFF'} activeOpacity={0.5}>
+                <Text style={this.props.textStyle}>{this.props.text}</Text>
+              </TouchableHighlight>
+      
+    )
+  }
+}
+
+
 
 //should go in separate overaly file
 class AnimatedOverlay extends Component {
