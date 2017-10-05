@@ -24,36 +24,11 @@ Mailer.mail({
 //xxx make sure to check xxx in datepicker/index.js and datepicker/style.js
 //från objective c-appen:
 /*
-    unitsSingular=[NSArray arrayWithObjects:@"minute",@"hour",@"day",@"week",@"month",@"year", nil];
-    unitsPlural=[NSArray arrayWithObjects:@"minutes",@"hours",@"days",@"weeks",@"months",@"years", nil];
     UIColor *lightorange=[UIColor colorWithRed:254.0/255.0 green:179.0/255.0 blue:110.0/255.0 alpha:1]; '#FEB36E', //ligth orange
 
-- (IBAction)digitButtonTouchUpInside:(id)sender{
-    //set digit to zero if day or custom was selected right before. otherwise old digit would be concatenated to pressed digit
-    if (selectedCategory!=DIGITUNIT) {
-        selectedDigit=0;
-    }
-    
-    selectedCategory=DIGITUNIT;
 
-    if (selectedDigit<100) {
-        selectedDigit=selectedDigit*10+([sender tag]-digitOffset);
-        [self prettyPrint];
-    }
-    if (selectedDigit!=1) {
-        [self setUnitLabelsPlural];
-    }
-    else {
-        [self setUnitLabelsSingular];
-    }
 
-- (IBAction)backButtonTouchUpInside:(id)sender {
-    if (selectedCategory==DIGITUNIT) {
-        selectedDigit=selectedDigit/10;
 
-- (IBAction)dayButtonTouchUpInside:(id)sender {
-    selectedCategory=DAY;
-    selectedDay=[sender tag];
 
 - (void) prettyPrint {
     
@@ -101,6 +76,7 @@ Mailer.mail({
         formalTime=@"notvalid";
     }
     [digitlabelOutlet setText:prettyTime];
+
 }
 */
 
@@ -128,6 +104,7 @@ import {
   Animated,
   Dimensions,
   TouchableOpacity,
+  Image,
 } from 'react-native';
 
 import DatePicker from 'react-native-datepicker'
@@ -143,12 +120,20 @@ import Moment from 'moment';
 
 var Mailer = require('NativeModules').RNMail;
 
+const lightOrange = '#FEB36E';
+
+const days = ['mon','tue','wed','thu','fri','sat','sun','tomorrow'];
+const daysLong = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday','tomorrow'];
+const units = ['minute','hour','day','week','month','year'];
+
+
 export default class Whenwhat extends Component {
   
   constructor(props) {
     super(props);
     this.state={
-      text:'',logtext:Dimensions.get('window').width,
+      text:'',
+      logtext:'What',
       digit: 0,
       category: 'DIGITUNIT',
       day: 0,
@@ -159,8 +144,9 @@ export default class Whenwhat extends Component {
     this.handleDigitPress=this.handleDigitPress.bind(this);
     this.handleUnitPress=this.handleUnitPress.bind(this);
     this.handleDayPress=this.handleDayPress.bind(this);
-    this.handleTomorrowPress=this.handleTomorrowPress.bind(this);
     this.handleBackPress=this.handleBackPress.bind(this);
+    this.handleSettingsPress=this.handleSettingsPress.bind(this);
+    this.handleInfoPress=this.handleInfoPress.bind(this);
     this.onDateChange=this.onDateChange.bind(this);
     this.openOverlay = this.openOverlay.bind(this);
     this.closeOverlay = this.closeOverlay.bind(this);
@@ -182,28 +168,118 @@ export default class Whenwhat extends Component {
   }
   
   onDateChange(date) {
-    this.setState({date: date});
+    this.setState({category:'CUSTOM',date: date});
+    //xxx prettyprint och lite till kanske???
+    
+    //xxx ska detta med oldcategory in någonstans?
+    /*
+    oldSelectedCategory=selectedCategory;
+    oldSelectedDate=selectedDate;
+    selectedCategory=CUSTOM;
+    
+    [self showDatePicker];
+    [self selectCustomDate];
+    */
+    
   }
   
   handleDigitPress(e,i) {
-      this.setState({logtext:i});
+    let digit=this.state.digit;
+    let category=this.state.category;
+    //set digit to zero if day or custom was selected right before. otherwise old digit would be concatenated to pressed digit
+    if (category != 'DIGITUNIT') {
+        digit=0;
+        category='DIGITUNIT';
+    }
+    
+    if (digit<100) {
+        digit=digit*10+i;
+        //xxx[self prettyPrint];
+    }
+    if (digit!=1) {
+        //[self setUnitLabelsPlural];
+    }
+    else {
+        //[self setUnitLabelsSingular];
+    }
+    this.setState({digit:digit,category:category});
   }
 
   handleUnitPress(e,i) {
-      this.setState({logtext:i});
+    if (this.state.digit==0) {
+      this.setState({digit:1});
+    }
+    this.setState({category:'DIGITUNIT',unit:i});
+    //[self prettyPrint];
   }
 
 
   handleDayPress(e,i) {
-      this.setState({logtext:i});
+      this.setState({category:'DAY',day:i});
+      //xxx prettyprint
+      
   }
 
-  handleTomorrowPress(e,i) {
-      this.setState({logtext:i});
+  
+  prettyPrint() {
+    let pretty='';
+    const {digit, unit, category, day} = this.state;
+    if (category=='DIGITUNIT') {
+      if (digit==0) {
+        //this could logically be handled by the option below, but in formalTime it needs its own option. 
+        pretty=digit+" "+units[unit]+'s';
+      } else {
+        pretty=digit+" "+units[unit]+(digit!=1?'s':'');
+      }
+    } else if (category=='CUSTOM') {
+      ///xxx dela upp på två rader
+      pretty=this.state.date;
+    } else if (category=='DAY') {
+      pretty=daysLong[day];
+    } else {
+      pretty='?';
+    }
+    return pretty;
   }
+  
+  formalTime() {
+    let formal='';
+    const {digit, unit, category, day} = this.state;
+    if (category=='DIGITUNIT') {
+      if (digit==0) {
+        //0 units actually translates to 1 hour by followupthen, so if 0 minutes is intended to mean "now" it wont work. Set to 1 min instead
+        formal='1minute';
+      } else {
+        formal=digit+units[unit]+(digit!=1?'s':'');
+      }
+    } else if (category=='CUSTOM') {
+      ///xxx se över olika datumformat
+      formal=this.state.date;
+    } else if (category=='DAY') {
+      formal=daysLong[day];
+    } else {
+      formal='notvalid';
+    }
+    return formal;
+  }
+
 
   handleBackPress(e,i) {
-      this.setState({logtext:i});
+    if (this.state.category=='DIGITUNIT') {
+      this.setState((prevState, props) => ({
+        digit: Math.floor(prevState.digit/10)
+      }));
+      //xxx prettyprint    
+    }
+  }
+  
+  handleSettingsPress(e,i) {
+    this.setState({logtext:'gear'});
+  }
+
+
+  handleInfoPress(e,i) {
+    this.setState({logtext:'info'});
   }
 
   
@@ -216,29 +292,27 @@ export default class Whenwhat extends Component {
       <View style={styles.container}>
         <View style={styles.subContainer}>
       
-          <View style={styles.x1}>
+          <View style={styles.x1a}>
       
-            <Text>{this.state.logtext}</Text>
+      <Text style={[styles.whenwhat]}>What</Text>
             
-            <TouchableHighlight>
-              <Text>follow up</Text>
-            </TouchableHighlight>
+            <WWButton slots={2} showBorderLeft={true} showBorderRight={false} showBorderTop={true} text={'follow up'} textStyle={styles.buttonText} onPress={(e,i) => this.handleDayPress(e,7)} />
           </View>
             <View style={styles.y}>
               <TextInput
-                style={{height: 40, borderColor: 'gray', borderWidth: 1}}
+                style={{fontSize:26, borderColor: 'transparent', borderTopWidth:4,borderLeftWidth: 14,borderRightWidth: 14  }}
                 onChangeText={(text) => this.setState({text})}
                 onBlur={()=>this.closeOverlay()}
                 onFocus={()=>this.openOverlay()}
                 value={this.state.text}
-                placeholder={'enter subject here'}
+                placeholder={'enter subject'}
                 ref={instance => { this._textInput = instance; }}
               />
             </View>
             <View style={styles.x}>
           
             <TouchableHighlight>
-              <Text>When</Text>
+              <Text style={styles.whenwhat}>When</Text>
                 
             </TouchableHighlight>
           <AnimatedOverlay
@@ -251,47 +325,49 @@ export default class Whenwhat extends Component {
             </View>
           <View style={styles.z}>
             <View style={[styles.buttonRow]}>
-              <WWButton slots={1} lineRight={true} text={1} textStyle={styles.buttonText} onPress={(e,i) => this.handleDigitPress(e,1)} />
-              <WWButton slots={1} lineRight={true} text={2} textStyle={styles.buttonText} onPress={(e,i) => this.handleDigitPress(e,2)} />
-              <WWButton slots={1} lineRight={true} text={3} textStyle={styles.buttonText} onPress={(e,i) => this.handleDigitPress(e,3)} />
-              <View style={styles.button2}>
-                <Text>{this.state.date}</Text>
+              <WWButton slots={1} showBorderRight={true} showBorderTop={true} text={'1'} textStyle={styles.buttonText} onPress={(e,i) => this.handleDigitPress(e,1)} />
+              <WWButton slots={1} showBorderRight={true} showBorderTop={true} text={'2'} textStyle={styles.buttonText} onPress={(e,i) => this.handleDigitPress(e,2)} />
+              <WWButton slots={1} showBorderRight={true} showBorderTop={true} text={'3'} textStyle={styles.buttonText} onPress={(e,i) => this.handleDigitPress(e,3)} />
+              <View style={styles.dateDisplay}>
+                <Text style={styles.dateDisplayText}>{this.prettyPrint()+'\n'+this.formalTime()}</Text>
               </View>
             </View>
             <View style={[styles.buttonRow]}>
-              <WWButton slots={1} lineRight={true} text={4} textStyle={styles.buttonText} onPress={(e,i) => this.handleDigitPress(e,4)} />
-              <WWButton slots={1} lineRight={true} text={5} textStyle={styles.buttonText} onPress={(e,i) => this.handleDigitPress(e,5)} />
-              <WWButton slots={1} lineRight={true} text={6} textStyle={styles.buttonText} onPress={(e,i) => this.handleDigitPress(e,6)} />
-              <WWButton slots={1} lineRight={true} text={'minutes'} textStyle={styles.buttonText} onPress={(e,i) => this.handleUnitPress(e,0)} />
-              <WWButton slots={1} lineRight={false} text={'hours'} textStyle={styles.buttonText} onPress={(e,i) => this.handleUnitPress(e,1)} />
+              <WWButton slots={1} showBorderRight={true} showBorderTop={true} text={'4'} textStyle={styles.buttonText} onPress={(e,i) => this.handleDigitPress(e,4)} />
+              <WWButton slots={1} showBorderRight={true} showBorderTop={true} text={'5'} textStyle={styles.buttonText} onPress={(e,i) => this.handleDigitPress(e,5)} />
+              <WWButton slots={1} showBorderRight={true} showBorderTop={true} text={'6'} textStyle={styles.buttonText} onPress={(e,i) => this.handleDigitPress(e,6)} />
+              <WWButton slots={1} showBorderRight={true} showBorderTop={true} text={units[0]} textStyle={styles.buttonText} onPress={(e,i) => this.handleUnitPress(e,0)} />
+              <WWButton slots={1} showBorderRight={false} showBorderTop={true} text={units[1]} textStyle={styles.buttonText} onPress={(e,i) => this.handleUnitPress(e,1)} />
             </View>
             <View style={[styles.buttonRow]}>
-              <WWButton slots={1} lineRight={true} text={7} textStyle={styles.buttonText} onPress={(e,i) => this.handleDigitPress(e,7)} />
-              <WWButton slots={1} lineRight={true} text={8} textStyle={styles.buttonText} onPress={(e,i) => this.handleDigitPress(e,8)} />
-              <WWButton slots={1} lineRight={true} text={9} textStyle={styles.buttonText} onPress={(e,i) => this.handleDigitPress(e,9)} />
-              <WWButton slots={1} lineRight={true} text={'days'} textStyle={styles.buttonText} onPress={(e,i) => this.handleUnitPress(e,2)} />
-              <WWButton slots={1} lineRight={false} text={'weeks'} textStyle={styles.buttonText} onPress={(e,i) => this.handleUnitPress(e,3)} />
+              <WWButton slots={1} showBorderRight={true} showBorderTop={true} text={'7'} textStyle={styles.buttonText} onPress={(e,i) => this.handleDigitPress(e,7)} />
+              <WWButton slots={1} showBorderRight={true} showBorderTop={true} text={'8'} textStyle={styles.buttonText} onPress={(e,i) => this.handleDigitPress(e,8)} />
+              <WWButton slots={1} showBorderRight={true} showBorderTop={true} text={'9'} textStyle={styles.buttonText} onPress={(e,i) => this.handleDigitPress(e,9)} />
+              <WWButton slots={1} showBorderRight={true} showBorderTop={true} text={units[2]} textStyle={styles.buttonText} onPress={(e,i) => this.handleUnitPress(e,2)} />
+              <WWButton slots={1} showBorderRight={false} showBorderTop={true} text={units[3]} textStyle={styles.buttonText} onPress={(e,i) => this.handleUnitPress(e,3)} />
 
             </View>
             <View style={[styles.buttonRow]}>
-              <WWButton slots={2} lineRight={true} text={0} textStyle={styles.buttonText} onPress={(e,i) => this.handleDigitPress(e,0)} />
-              <WWButton slots={1} lineRight={true} text={'<'} textStyle={styles.buttonText} onPress={(e,i) => this.handleBackPress(e,0)} />
-              <WWButton slots={1} lineRight={true} text={'months'} textStyle={styles.buttonText} onPress={(e,i) => this.handleUnitPress(e,2)} />
-              <WWButton slots={1} lineRight={false} text={'years'} textStyle={styles.buttonText} onPress={(e,i) => this.handleUnitPress(e,3)} />
+              <WWButton slots={2} showBorderRight={true} showBorderTop={true} text={'0'} textStyle={styles.buttonText} onPress={(e,i) => this.handleDigitPress(e,0)} />
+              <WWButton slots={1} showBorderRight={true} showBorderTop={true} text={'⌫'} textStyle={styles.buttonText} onPress={(e,i) => this.handleBackPress(e,0)} />
+              <WWButton slots={1} showBorderRight={true} showBorderTop={true} text={units[4]} textStyle={styles.buttonText} onPress={(e,i) => this.handleUnitPress(e,4)} />
+              <WWButton slots={1} showBorderRight={false} showBorderTop={true} text={units[5]} textStyle={styles.buttonText} onPress={(e,i) => this.handleUnitPress(e,5)} />
             </View>
             <View style={[styles.buttonRow]}>
-                <WWButton slots={1} lineRight={true} text={'mon'} textStyle={styles.buttonText} onPress={(e,i) => this.handleDayPress(e,0)} />
-                <WWButton slots={1} lineRight={true} text={'tue'} textStyle={styles.buttonText} onPress={(e,i) => this.handleDayPress(e,1)} />
-                <WWButton slots={1} lineRight={true} text={'wed'} textStyle={styles.buttonText} onPress={(e,i) => this.handleDayPress(e,2)} />
-                <WWButton slots={1} lineRight={true} text={'thu'} textStyle={styles.buttonText} onPress={(e,i) => this.handleDayPress(e,3)} />
-                <WWButton slots={1} lineRight={false} text={'fri'} textStyle={styles.buttonText} onPress={(e,i) => this.handleDayPress(e,4)} />
+                <WWButton slots={1} showBorderRight={true} showBorderTop={true} text={days[0]} textStyle={styles.buttonText} onPress={(e,i) => this.handleDayPress(e,0)} />
+                <WWButton slots={1} showBorderRight={true} showBorderTop={true} text={days[1]} textStyle={styles.buttonText} onPress={(e,i) => this.handleDayPress(e,1)} />
+                <WWButton slots={1} showBorderRight={true} showBorderTop={true} text={days[2]} textStyle={styles.buttonText} onPress={(e,i) => this.handleDayPress(e,2)} />
+                <WWButton slots={1} showBorderRight={true} showBorderTop={true} text={days[3]} textStyle={styles.buttonText} onPress={(e,i) => this.handleDayPress(e,3)} />
+                <WWButton slots={1} showBorderRight={false} showBorderTop={true} text={days[4]} textStyle={styles.buttonText} onPress={(e,i) => this.handleDayPress(e,4)} />
             </View>
             <View style={[styles.buttonRow]}>
-              <WWButton slots={1} lineRight={true} text={'sat'} textStyle={styles.buttonText} onPress={(e,i) => this.handleDayPress(e,5)} />
-              <WWButton slots={1} lineRight={true} text={'sun'} textStyle={styles.buttonText} onPress={(e,i) => this.handleDayPress(e,6)} />
-              <WWButton slots={2} lineRight={true} text={'tomorrow'} textStyle={styles.buttonText} onPress={(e,i) => this.handleTomorrowPress(e,6)} />
+              <WWButton slots={1} showBorderRight={true} showBorderTop={true} text={days[5]} textStyle={styles.buttonText} onPress={(e,i) => this.handleDayPress(e,5)} />
+              <WWButton slots={1} showBorderRight={true} showBorderTop={true} text={days[6]} textStyle={styles.buttonText} onPress={(e,i) => this.handleDayPress(e,6)} />
+              <WWButton slots={2} showBorderRight={true} showBorderTop={true} text={days[7]} textStyle={styles.buttonText} onPress={(e,i) => this.handleDayPress(e,7)} />
               <DatePicker
                 style={[{flex:1}, styles.button]}
+                customStyles={{textStyle:styles.buttonText}}
+                showBorderTop={true}
                 date={this.state.date}
                 mode="datetime"
                 placeholder="custom"
@@ -316,15 +392,15 @@ export default class Whenwhat extends Component {
                 
                 
           </View>
-          <View style={styles.x1}>
+          <View style={styles.x1b}>
             
-            <TouchableHighlight>
-              <Text>kugghjul</Text>
+                <TouchableHighlight onPress={(e,i) => this.handleSettingsPress(e,0)} underlayColor={lightOrange} activeOpacity={0.5}>
+                <Image source={require('./img/gearwhite64x64.png')} style={{width: 40, height: 40}}/>
+            </TouchableHighlight>
+            <TouchableHighlight onPress={(e,i) => this.handleInfoPress(e,0)} underlayColor={lightOrange} activeOpacity={0.5}>
+                <Image source={require('./img/infowhite64x64.png')} style={{width: 40, height: 40}}/>
             </TouchableHighlight>
                 
-            <TouchableHighlight>
-              <Text> i </Text>
-            </TouchableHighlight>
           <AnimatedOverlay
                 backgroundColor={'white'}
                 opacity={0.9}
@@ -333,7 +409,6 @@ export default class Whenwhat extends Component {
           />
                 
           </View>
-
 
         </View>
                 
@@ -357,7 +432,7 @@ const styles = StyleSheet.create({
   },
 
   buttonText: {
-    color: 'orange',
+    color: 'darkorange',
     fontSize: 16,
     //textAlign:'content', //doesn't make any difference
   },
@@ -367,51 +442,64 @@ const styles = StyleSheet.create({
     alignItems:'center',
     justifyContent: 'center',
     //marginRight:1,
-    borderTopWidth:StyleSheet.hairlineWidth,
+    //borderTopWidth:StyleSheet.hairlineWidth,
     backgroundColor:'white',
-    borderColor: 'orange',
+    borderColor: 'darkorange',
   },
 
-  button1: {
+
+  dateDisplay: {
     flex:1,
+    borderColor: 'darkorange',
+    borderTopWidth:StyleSheet.hairlineWidth,
     alignItems:'center',
     justifyContent: 'center',
-    marginRight:1,
-    marginBottom:1,
-    backgroundColor:'lightyellow',
+    backgroundColor:lightOrange,
   },
 
-  button2: {
-    flex:2,
-    alignItems:'center',
-    justifyContent: 'center',
-    marginRight:2,
-    marginBottom:1,
-    backgroundColor:'lightyellow',
+  dateDisplayText: {
+    textAlign: 'center',
+    fontSize: 16,
   },
    
 
-  x1: {
+  x1a: {
     flex:0.09,
-    backgroundColor:'red',
+    backgroundColor:'white',
     flexDirection: 'row',
     justifyContent: 'space-between',
+  },
+
+  x1b: {
+    flex:0.23,
+    backgroundColor:lightOrange,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-end',
+    //alignSelf: 'flex-end',
+    //position: 'absolute',
+    //bottom: 0,
   },
   
   
   x: {
     flex:0.09,
-    backgroundColor:'yellow',
+    backgroundColor:'white',
   },
   y: {
     flex:0.07,
-    backgroundColor:'green',
+    backgroundColor:lightOrange,
   },
   z: {
     flex:0.5,
-    backgroundColor:'blue',
+    backgroundColor:'white',
   },
   
+  whenwhat: {
+    color:'orange',
+    fontSize:32, //height seems to bo 20% more than fontSize. max 40 works on iphone 5
+    marginLeft:14,
+  },
   
   
   container: {
@@ -421,14 +509,14 @@ const styles = StyleSheet.create({
     //alignItems: 'center',
 
 
-    backgroundColor:'purple',
+    backgroundColor:'white',
   },
   
   subContainer: {//adjust for status bar on
     flex:1,
     //alignItems:'center',
     marginTop:24, //Environment.statusBarHeight, 
-    backgroundColor:'orange',
+    backgroundColor:lightOrange,
   },  
   
   welcome: {
@@ -458,15 +546,14 @@ class WWButton extends Component {
     let width=this.props.slots*Math.floor(Dimensions.get('window').width/5+0.99);
     let height=Math.floor((Dimensions.get('window').height-24)/6/2);
 
-    if (this.props.lineRight) {
-      //width=width-10;
-      borderRightWidth=StyleSheet.hairlineWidth; //eller 1
-    } else {
-      borderRightWidth=0;
-    }
+    const borderRightWidth=this.props.showBorderRight ? StyleSheet.hairlineWidth : 0;
+    const borderLeftWidth=this.props.showBorderLeft ? StyleSheet.hairlineWidth : 0;
+    const borderTopWidth=this.props.showBorderTop ? StyleSheet.hairlineWidth : 0;
+    const borderBottomWidth=this.props.showBorderBottom ? StyleSheet.hairlineWidth : 0;
+    
 
     return (
-                <TouchableHighlight style={[{width:width,borderRightWidth:borderRightWidth},styles.button]} onPress={this.props.onPress} underlayColor={'#FFFFFF'} activeOpacity={0.5}>
+                <TouchableHighlight style={[{width:width,borderLeftWidth:borderLeftWidth,borderRightWidth:borderRightWidth,borderTopWidth:borderTopWidth,borderBottomWidth:borderBottomWidth,},styles.button]} onPress={this.props.onPress} underlayColor={'#FFFFFF'} activeOpacity={0.5}>
                 <Text style={this.props.textStyle}>{this.props.text}</Text>
               </TouchableHighlight>
       
