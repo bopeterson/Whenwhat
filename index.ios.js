@@ -26,58 +26,36 @@ Mailer.mail({
 /*
     UIColor *lightorange=[UIColor colorWithRed:254.0/255.0 green:179.0/255.0 blue:110.0/255.0 alpha:1]; '#FEB36E', //ligth orange
 
+Behöver not inte ta hänsyn till oldSelectedCategory
 
+- (IBAction)datePickerCancelButtonTouchUpInside:(id)sender {
+    //here we must restore what was chosen before datepicker opened
+    selectedCategory=oldSelectedCategory;
+    selectedDate=oldSelectedDate;
+    [self hideDatePicker];
 
-
-
-- (void) prettyPrint {
-    
-    if (selectedCategory==DIGITUNIT) {
-        [self outputLines:1];
-        //first priority
-        //step 1: prettyTime
-        if (selectedDigit!=1) {
-            if (selectedDigit==0 && (selectedUnit-unitOffset)==0) {
-                //0 minutes actually translates to 1 hour by followupthen, so if 0 minutes is intended to mean "now" it wont work
-                prettyTime=@"now";
-            } else {
-                prettyTime=[NSString stringWithFormat:@"%i %@",selectedDigit,[unitsPlural objectAtIndex:selectedUnit-unitOffset]];
-            }
-        } else {
-            prettyTime=[NSString stringWithFormat:@"%i %@",selectedDigit,[unitsSingular objectAtIndex:selectedUnit-unitOffset]];
-        }
-        //step 2: formalTime
-        if (selectedDigit!=1) {
-            if (selectedDigit==0 && (selectedUnit-unitOffset)==0) {
-                //0 minutes actually translates to 1 hour, so if 0 minutes is intended to mean "now" it wont work
-                formalTime=[NSString stringWithFormat:@"%i%@",1,[unitsSingular objectAtIndex:selectedUnit-unitOffset]];
-            } else {
-                formalTime=[NSString stringWithFormat:@"%i%@",selectedDigit,[unitsPlural objectAtIndex:selectedUnit-unitOffset]];
-            }
-        } else {
-            formalTime=[NSString stringWithFormat:@"%i%@",selectedDigit,[unitsSingular objectAtIndex:selectedUnit-unitOffset]];
-        }
-    } else if (selectedCategory==CUSTOM) {
-        [self outputLines:2];
-        //second priority
-        //step 1: prettyTime
-        prettyTime=[self formatPrettyTime:selectedDate];
-        //step 2: formalTime
-        formalTime=[self formatFormalTime:selectedDate];
-    } else if (selectedCategory==DAY) {
-        [self outputLines:1];
-        prettyTime=[days objectAtIndex:selectedDay-dayOffset];
-        formalTime=[days objectAtIndex:selectedDay-dayOffset];
-    } else {
-        [self outputLines:1];
-        //step 1: prettyTime
-        prettyTime=@"?";
-        //step 2: formalTime
-        formalTime=@"notvalid";
-    }
-    [digitlabelOutlet setText:prettyTime];
-
+    [self prettyPrint];
+    //XX[self printStat:_cmd];
 }
+
+- (IBAction)customButtonTouchUpInside:(id)sender {
+
+    oldSelectedCategory=selectedCategory;
+    oldSelectedDate=selectedDate;
+    selectedCategory=CUSTOM;
+    
+    [self showDatePicker];
+    [self selectCustomDate];
+
+    //XX[self printStat:_cmd];
+}
+
+
+
+
+
+
+
 */
 
 /*
@@ -167,11 +145,11 @@ export default class Whenwhat extends Component {
     this.setState({ overlayShow: false });
   }
   
-  onDateChange(date) {
-    this.setState({category:'CUSTOM',date: date});
+  onDateChange(dateStr,date) {
+    this.setState({category:'CUSTOM',date: dateStr});
     //xxx prettyprint och lite till kanske???
     
-    //xxx ska detta med oldcategory in någonstans?
+    //xxx ska detta med oldcategory in någonstans? troligtvis inte
     /*
     oldSelectedCategory=selectedCategory;
     oldSelectedDate=selectedDate;
@@ -254,6 +232,20 @@ export default class Whenwhat extends Component {
       }
     } else if (category=='CUSTOM') {
       ///xxx se över olika datumformat
+      
+      /*
+-(NSString*)formatFormalTime:(NSDate*)date{
+    NSDateFormatter *dateFormatter = [[NSDateFormatter alloc] init];
+    [dateFormatter setLocale:[[NSLocale alloc] initWithLocaleIdentifier:@"en_US_POSIX"]]; 
+    [dateFormatter setDateFormat:@"hhmmayyyy-MM-dd"];
+    return [dateFormatter stringFromDate:date];
+}
+      
+      
+      
+      */
+      
+      
       formal=this.state.date;
     } else if (category=='DAY') {
       formal=daysLong[day];
@@ -329,7 +321,7 @@ export default class Whenwhat extends Component {
               <WWButton slots={1} showBorderRight={true} showBorderTop={true} text={'2'} textStyle={styles.buttonText} onPress={(e,i) => this.handleDigitPress(e,2)} />
               <WWButton slots={1} showBorderRight={true} showBorderTop={true} text={'3'} textStyle={styles.buttonText} onPress={(e,i) => this.handleDigitPress(e,3)} />
               <View style={styles.dateDisplay}>
-                <Text style={styles.dateDisplayText}>{this.prettyPrint()+'\n'+this.formalTime()}</Text>
+                <Text style={styles.dateDisplayText}>{this.prettyPrint()}</Text>
               </View>
             </View>
             <View style={[styles.buttonRow]}>
