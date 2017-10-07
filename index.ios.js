@@ -3,9 +3,6 @@
  * https://github.com/facebook/react-native
  * @flow
  */
-
-
-
 /*
 Mailer.mail({
       subject: 'need help',
@@ -20,54 +17,9 @@ Mailer.mail({
 */
 
 
-
-//xxx make sure to check xxx in datepicker/index.js and datepicker/style.js
-//från objective c-appen:
 /*
     UIColor *lightorange=[UIColor colorWithRed:254.0/255.0 green:179.0/255.0 blue:110.0/255.0 alpha:1]; '#FEB36E', //ligth orange
-
-Behöver not inte ta hänsyn till oldSelectedCategory
-
-- (IBAction)datePickerCancelButtonTouchUpInside:(id)sender {
-    //here we must restore what was chosen before datepicker opened
-    selectedCategory=oldSelectedCategory;
-    selectedDate=oldSelectedDate;
-    [self hideDatePicker];
-
-    [self prettyPrint];
-    //XX[self printStat:_cmd];
-}
-
-- (IBAction)customButtonTouchUpInside:(id)sender {
-
-    oldSelectedCategory=selectedCategory;
-    oldSelectedDate=selectedDate;
-    selectedCategory=CUSTOM;
-    
-    [self showDatePicker];
-    [self selectCustomDate];
-
-    //XX[self printStat:_cmd];
-}
-
-
-
-
-
-
-
 */
-
-/*
-vilka states?
-
-selectedDigit
-selectedCategory
-selectedDay
-selectedUnit
-*/
-
-
 
 import React, { Component } from 'react';
 import {
@@ -83,11 +35,15 @@ import {
   Dimensions,
   TouchableOpacity,
   Image,
+  NativeModules,
 } from 'react-native';
 
 import DatePicker from 'react-native-datepicker'
 
-import Moment from 'moment';
+let locale = NativeModules.SettingsManager.settings.AppleLocale.replace('_','-');
+console.log(locale);
+console.log(NativeModules.SettingsManager.settings);
+
 
 //https://facebook.github.io/react-native/releases/0.27/docs/datepickerios.html
 //<DatePickerIOS></DatePickerIOS>
@@ -103,7 +59,7 @@ const lightOrange = '#FEB36E';
 const days = ['mon','tue','wed','thu','fri','sat','sun','tomorrow'];
 const daysLong = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday','tomorrow'];
 const units = ['minute','hour','day','week','month','year'];
-
+const unitsPlural = ['minutes','hours','days','weeks','months','years'];
 
 export default class Whenwhat extends Component {
   
@@ -116,7 +72,7 @@ export default class Whenwhat extends Component {
       category: 'DIGITUNIT',
       day: 0,
       unit: 0,
-      date: Moment().format('YYYY-MM-DD HH:mm'), //new Date(),
+      date: null,
       overlayShow: false,
     };
     this.handleDigitPress=this.handleDigitPress.bind(this);
@@ -128,10 +84,7 @@ export default class Whenwhat extends Component {
     this.onDateChange=this.onDateChange.bind(this);
     this.openOverlay = this.openOverlay.bind(this);
     this.closeOverlay = this.closeOverlay.bind(this);
-
-//    this.hideKeyboard = this.hideKeyboard.bind(this)
   }
-  
 
   openOverlay() {
     this.setState({ overlayShow: true });
@@ -145,20 +98,8 @@ export default class Whenwhat extends Component {
     this.setState({ overlayShow: false });
   }
   
-  onDateChange(dateStr,date) {
-    this.setState({category:'CUSTOM',date: dateStr});
-    //xxx prettyprint och lite till kanske???
-    
-    //xxx ska detta med oldcategory in någonstans? troligtvis inte
-    /*
-    oldSelectedCategory=selectedCategory;
-    oldSelectedDate=selectedDate;
-    selectedCategory=CUSTOM;
-    
-    [self showDatePicker];
-    [self selectCustomDate];
-    */
-    
+  onDateChange(date) {
+    this.setState({category:'CUSTOM',date: date});
   }
   
   handleDigitPress(e,i) {
@@ -172,13 +113,6 @@ export default class Whenwhat extends Component {
     
     if (digit<100) {
         digit=digit*10+i;
-        //xxx[self prettyPrint];
-    }
-    if (digit!=1) {
-        //[self setUnitLabelsPlural];
-    }
-    else {
-        //[self setUnitLabelsSingular];
     }
     this.setState({digit:digit,category:category});
   }
@@ -188,16 +122,12 @@ export default class Whenwhat extends Component {
       this.setState({digit:1});
     }
     this.setState({category:'DIGITUNIT',unit:i});
-    //[self prettyPrint];
   }
 
 
   handleDayPress(e,i) {
       this.setState({category:'DAY',day:i});
-      //xxx prettyprint
-      
   }
-
   
   prettyPrint() {
     let pretty='';
@@ -205,13 +135,13 @@ export default class Whenwhat extends Component {
     if (category=='DIGITUNIT') {
       if (digit==0) {
         //this could logically be handled by the option below, but in formalTime it needs its own option. 
-        pretty=digit+" "+units[unit]+'s';
+        pretty=digit+" "+unitsPlural[unit];
       } else {
-        pretty=digit+" "+units[unit]+(digit!=1?'s':'');
+        pretty=digit+" "+(digit!=1?unitsPlural[unit]:units[unit]);
       }
     } else if (category=='CUSTOM') {
-      ///xxx dela upp på två rader
-      pretty=this.state.date;
+      pretty=this.state.date.toLocaleDateString(locale)+'\n'+
+             this.state.date.toLocaleTimeString(locale, {hour:'2-digit',minute:'2-digit'});
     } else if (category=='DAY') {
       pretty=daysLong[day];
     } else {
@@ -228,7 +158,7 @@ export default class Whenwhat extends Component {
         //0 units actually translates to 1 hour by followupthen, so if 0 minutes is intended to mean "now" it wont work. Set to 1 min instead
         formal='1minute';
       } else {
-        formal=digit+units[unit]+(digit!=1?'s':'');
+        formal=digit+(digit!=1?unitsPlural[unit]:units[unit]);
       }
     } else if (category=='CUSTOM') {
       ///xxx se över olika datumformat
@@ -260,8 +190,7 @@ export default class Whenwhat extends Component {
     if (this.state.category=='DIGITUNIT') {
       this.setState((prevState, props) => ({
         digit: Math.floor(prevState.digit/10)
-      }));
-      //xxx prettyprint    
+      }));  
     }
   }
   
@@ -269,15 +198,10 @@ export default class Whenwhat extends Component {
     this.setState({logtext:'gear'});
   }
 
-
   handleInfoPress(e,i) {
     this.setState({logtext:'info'});
   }
 
-  
-  // i textinput
-  //onFocus={()=>this.setState({buttonOpacity:0.1})}
-                
   
   render() {
     return (
@@ -366,23 +290,13 @@ export default class Whenwhat extends Component {
                 format="YYYY-MM-DD HH:mm"
                 onDateChange={this.onDateChange}
               />
-                  
-                
-                
-                
-
             </View>
-                
-          
-          <AnimatedOverlay
-                backgroundColor={'white'}
-                opacity={0.9}
-                onPress={this.closeOverlay}
-                overlayShow={this.state.overlayShow}
-          />
-                
-                
-                
+            <AnimatedOverlay
+              backgroundColor={'white'}
+              opacity={0.9}
+              onPress={this.closeOverlay}
+              overlayShow={this.state.overlayShow}
+            />
           </View>
           <View style={styles.x1b}>
             
@@ -399,15 +313,8 @@ export default class Whenwhat extends Component {
                 onPress={this.closeOverlay}
                 overlayShow={this.state.overlayShow}
           />
-                
           </View>
-
         </View>
-                
-                
-                
-                
-                
       </View>
     );
   }
@@ -527,8 +434,6 @@ const styles = StyleSheet.create({
 });
 
 AppRegistry.registerComponent('Whenwhat', () => Whenwhat);
-
-
 
 class WWButton extends Component {
 //flex:this.props.slots
