@@ -32,11 +32,9 @@ local.properties
 
 # node.js
 #
-
 !/node_modules
 /node_modules/*
 !/node_modules/react-native-datepicker
-
 npm-debug.log
 yarn-error.log
 

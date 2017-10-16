@@ -4,16 +4,17 @@
  * @flow
  */
 /*
-Mailer.mail({
-      subject: 'need help',
-      recipients: ['bo.peterson@mah.se'],
-      body: 'Some text',
-      isHTML: true,
-    }, (error, event) => {
-        if(error) {
-          AlertIOS.alert('Error', 'Could not send mail. Please send a mail to support@example.com');
-        }
-    });
+*/
+
+/* kvar att göra
+ipad kvadratanpassning
+ej tillåta snurra på iphone
+animated overlay mail skickat (eller bara alrer knapp)
+kugghjul
+i-knapp
+större text i knappar
+större when och what-text
+
 */
 
 
@@ -39,6 +40,10 @@ import {
 } from 'react-native';
 
 import DatePicker from 'react-native-datepicker'
+import Moment from 'moment';
+
+
+
 
 let locale = NativeModules.SettingsManager.settings.AppleLocale.replace('_','-');
 console.log(locale);
@@ -84,6 +89,8 @@ export default class Whenwhat extends Component {
     this.onDateChange=this.onDateChange.bind(this);
     this.openOverlay = this.openOverlay.bind(this);
     this.closeOverlay = this.closeOverlay.bind(this);
+    this.fadeInOutParent = this.fadeInOutParent.bind(this);
+    
   }
 
   openOverlay() {
@@ -161,22 +168,10 @@ export default class Whenwhat extends Component {
         formal=digit+(digit!=1?unitsPlural[unit]:units[unit]);
       }
     } else if (category=='CUSTOM') {
-      ///xxx se över olika datumformat
-      
-      /*
--(NSString*)formatFormalTime:(NSDate*)date{
-    NSDateFormatter *dateFormatter = [[NSDateFormatter alloc] init];
-    [dateFormatter setLocale:[[NSLocale alloc] initWithLocaleIdentifier:@"en_US_POSIX"]]; 
-    [dateFormatter setDateFormat:@"hhmmayyyy-MM-dd"];
-    return [dateFormatter stringFromDate:date];
-}
-      
-      
-      
-      */
-      
-      
-      formal=this.state.date;
+      //use format 1124pm2017-10-28. am/pm acts as separator between time and date
+      //This can also be used 2324.28.Oct.2017
+      const customFormat='hhmmaYYYY-MM-DD';
+      formal=Moment(this.state.date).format(customFormat);
     } else if (category=='DAY') {
       formal=daysLong[day];
     } else {
@@ -202,17 +197,76 @@ export default class Whenwhat extends Component {
     this.setState({logtext:'info'});
   }
 
+  sendButtonDimmed() {
+    return (this.state.text.length==0);
+  }
+  
+  sendMail(e) {
+    //event argument not used
+    Mailer.mail({
+      subject: this.state.text,
+          recipients: [this.formalTime()+'@followupthen.com'],
+          body: this.state.text,
+          isHTML: false,
+        }, (error, event) => {
+          console.log("event: "+JSON.stringify(event,null,4));
+                    
+            if(error) {
+              AlertIOS.alert('Error', 'Not configured to send email');
+            } else {
+              if (event=="sent") {
+                this.fadeInOutParent();
+                //AlertIOS.alert('Mail', 'Sent successfully');
+                //xxx ersätt med animation, se https://facebook.github.io/react-native/docs/animations.html och kanske https://facebook.github.io/react-native/releases/0.33/docs/animations.html och https://medium.com/react-native-training/react-native-animations-using-the-animated-api-ebe8e0669fae
+                this.resetStates();
+              } else if (event=="cancelled") {
+                //do nothing
+              }
+            }
+        });
+  }
+  
+  resetStates() {
+    this.setState(
+      {      
+        text:'',
+        digit: 0,
+        category: 'DIGITUNIT',
+        day: 0,
+        unit: 0,
+        date: null,
+        overlayShow: false,
+      }
+    )
+  }
+  
+  fadeInOutParent() {
+    this._animated.fadeInOutChild();
+  }
   
   render() {
     return (
       <View style={styles.container}>
         <View style={styles.subContainer}>
+
+
+
       
           <View style={styles.x1a}>
+
+
       
-      <Text style={[styles.whenwhat]}>What</Text>
+      
+      <Text style={[styles.whenwhat,{fontSize:16}]}>{'What'+this.formalTime()}</Text>
+
+    <FadeInOut
+      style={styles.fadeInOut}
+      ref={instance => { this._animated = instance; }}
+      children={<Text style={{color:'white',fontSize:24}}>mail sent</Text>}
+    />
+
             
-            <WWButton slots={2} showBorderLeft={true} showBorderRight={false} showBorderTop={true} text={'follow up'} textStyle={styles.buttonText} onPress={(e,i) => this.handleDayPress(e,7)} />
+            <WWButton slots={2} showBorderLeft={true} showBorderRight={false} showBorderTop={true} text={'follow up'} dimmed={this.sendButtonDimmed()} textStyle={styles.buttonText} onPress={(e,i) => this.sendMail()} />
           </View>
             <View style={styles.y}>
               <TextInput
@@ -231,17 +285,18 @@ export default class Whenwhat extends Component {
               <Text style={styles.whenwhat}>When</Text>
                 
             </TouchableHighlight>
-          <AnimatedOverlay
+                
+            <AnimatedOverlay
                 backgroundColor={'white'}
                 opacity={0.9}
                 onPress={this.closeOverlay}
                 overlayShow={this.state.overlayShow}
-          />
+            />
                 
-            </View>
+          </View>
           <View style={styles.z}>
             <View style={[styles.buttonRow]}>
-              <WWButton slots={1} showBorderRight={true} showBorderTop={true} text={'1'} textStyle={styles.buttonText} onPress={(e,i) => this.handleDigitPress(e,1)} />
+              <WWButton slots={1} showBorderRight={true} showBorderTop={true} text={'1'} textStyle={styles.buttonText} onPress={() => this.fadeInOutParent()} />
               <WWButton slots={1} showBorderRight={true} showBorderTop={true} text={'2'} textStyle={styles.buttonText} onPress={(e,i) => this.handleDigitPress(e,2)} />
               <WWButton slots={1} showBorderRight={true} showBorderTop={true} text={'3'} textStyle={styles.buttonText} onPress={(e,i) => this.handleDigitPress(e,3)} />
               <View style={styles.dateDisplay}>
@@ -297,6 +352,7 @@ export default class Whenwhat extends Component {
               onPress={this.closeOverlay}
               overlayShow={this.state.overlayShow}
             />
+              
           </View>
           <View style={styles.x1b}>
             
@@ -429,7 +485,20 @@ const styles = StyleSheet.create({
     top: 0,
     left: 0,
     position: 'absolute',
+  },
+  
+  fadeInOut: {
+    flex:1,
+    position:'absolute',
+    left: 0,
+    width: 200,
+    height: 100,
+    backgroundColor: 'orange',
+    alignItems: 'center',
+    justifyContent: 'center',
+    
   },  
+  
   
 });
 
@@ -448,9 +517,11 @@ class WWButton extends Component {
     const borderTopWidth=this.props.showBorderTop ? StyleSheet.hairlineWidth : 0;
     const borderBottomWidth=this.props.showBorderBottom ? StyleSheet.hairlineWidth : 0;
     
+    const opacity=this.props.dimmed ? 0.1 : 1.0;
+    const onPress=this.props.dimmed ? null : this.props.onPress;
 
     return (
-                <TouchableHighlight style={[{width:width,borderLeftWidth:borderLeftWidth,borderRightWidth:borderRightWidth,borderTopWidth:borderTopWidth,borderBottomWidth:borderBottomWidth,},styles.button]} onPress={this.props.onPress} underlayColor={'#FFFFFF'} activeOpacity={0.5}>
+                <TouchableHighlight style={[{width:width,borderLeftWidth:borderLeftWidth,borderRightWidth:borderRightWidth,borderTopWidth:borderTopWidth,borderBottomWidth:borderBottomWidth,opacity:opacity},styles.button]} onPress={onPress} underlayColor={'#FFFFFF'} activeOpacity={0.5}>
                 <Text style={this.props.textStyle}>{this.props.text}</Text>
               </TouchableHighlight>
       
@@ -551,6 +622,60 @@ class AnimatedOverlay extends Component {
       >
         <TouchableOpacity onPress={onPress} style={[styles.overlay, size]} />
         {children}
+      </Animated.View>
+    );
+  }
+}
+
+class FadeInOut extends Component {
+  props: {
+    style?: any;
+    children?: any;
+  }
+
+  static defaultProps = {
+    style: null,
+    children: null,
+  }
+
+  constructor(props) {
+    super(props);
+    this.state = {
+      opacity: new Animated.Value(0),
+    };
+  }
+ 
+  fadeInOutChild() {
+    this.fadeIn();
+  }
+
+  fadeIn() {
+    Animated.timing(this.state.opacity, {
+      toValue:1,
+      duration:900,
+    }).start(()=>{
+        this.fadeOut();
+    });    
+  }
+  
+  fadeOut() {
+    Animated.timing(this.state.opacity, {
+      toValue:0,
+      delay: 700,
+      duration:900,
+    }).start(()=>{
+        //this.fadeIn();
+    });
+  }
+
+  render() {
+    const { style, children } = this.props;
+    const opacity = { opacity: this.state.opacity };
+    return (
+      <Animated.View style={[style, opacity]}>
+        <View style={[style]}>
+          {children}
+        </View>
       </Animated.View>
     );
   }
