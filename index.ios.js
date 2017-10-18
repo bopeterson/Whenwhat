@@ -9,11 +9,10 @@
 /* kvar att göra
 ipad kvadratanpassning
 ej tillåta snurra på iphone
-animated overlay mail skickat (eller bara alrer knapp)
 kugghjul
 i-knapp
-större text i knappar
-större when och what-text
+touch here to set when
+spara sms-inställning
 
 */
 
@@ -37,7 +36,14 @@ import {
   TouchableOpacity,
   Image,
   NativeModules,
+  AsyncStorage,
 } from 'react-native';
+
+//npm install --save react-navigation
+import { 
+  StackNavigator,
+  NavigationActions,
+} from 'react-navigation';
 
 import DatePicker from 'react-native-datepicker'
 import Moment from 'moment';
@@ -90,6 +96,8 @@ export default class Whenwhat extends Component {
     this.openOverlay = this.openOverlay.bind(this);
     this.closeOverlay = this.closeOverlay.bind(this);
     this.fadeInOutParent = this.fadeInOutParent.bind(this);
+    this.focus = this.focus.bind(this);
+    this.resetStates = this.resetStates.bind(this);
     
   }
 
@@ -201,6 +209,11 @@ export default class Whenwhat extends Component {
     return (this.state.text.length==0);
   }
   
+  focus() {
+    console.log(this._textInput.isFocused());
+    this._textInput.focus();
+  }
+  
   sendMail(e) {
     //event argument not used
     Mailer.mail({
@@ -238,6 +251,7 @@ export default class Whenwhat extends Component {
         overlayShow: false,
       }
     )
+    this.focus();
   }
   
   fadeInOutParent() {
@@ -257,21 +271,18 @@ export default class Whenwhat extends Component {
 
       
       
-      <Text style={[styles.whenwhat,{fontSize:16}]}>{'What'+this.formalTime()}</Text>
+            <Text style={[styles.whenwhat]}>{'What'}</Text>
 
-    <FadeInOut
-      style={styles.fadeInOut}
-      ref={instance => { this._animated = instance; }}
-      children={<Text style={{color:'white',fontSize:24}}>mail sent</Text>}
-    />
+    
 
             
             <WWButton slots={2} showBorderLeft={true} showBorderRight={false} showBorderTop={true} text={'follow up'} dimmed={this.sendButtonDimmed()} textStyle={styles.buttonText} onPress={(e,i) => this.sendMail()} />
           </View>
             <View style={styles.y}>
               <TextInput
-                style={{fontSize:26, borderColor: 'transparent', borderTopWidth:4,borderLeftWidth: 14,borderRightWidth: 14  }}
+                style={{flex:1,fontSize:22, borderColor: 'transparent', borderLeftWidth: 14,borderRightWidth: 14, }}
                 onChangeText={(text) => this.setState({text})}
+                autoFocus={true}
                 onBlur={()=>this.closeOverlay()}
                 onFocus={()=>this.openOverlay()}
                 value={this.state.text}
@@ -281,46 +292,45 @@ export default class Whenwhat extends Component {
             </View>
             <View style={styles.x}>
           
-            <TouchableHighlight>
+            
               <Text style={styles.whenwhat}>When</Text>
                 
-            </TouchableHighlight>
-                
-            <AnimatedOverlay
+              <AnimatedOverlay
                 backgroundColor={'white'}
-                opacity={0.9}
+                opacity={0.8}
                 onPress={this.closeOverlay}
                 overlayShow={this.state.overlayShow}
-            />
+              />
                 
           </View>
           <View style={styles.z}>
+                
             <View style={[styles.buttonRow]}>
-              <WWButton slots={1} showBorderRight={true} showBorderTop={true} text={'1'} textStyle={styles.buttonText} onPress={() => this.fadeInOutParent()} />
-              <WWButton slots={1} showBorderRight={true} showBorderTop={true} text={'2'} textStyle={styles.buttonText} onPress={(e,i) => this.handleDigitPress(e,2)} />
-              <WWButton slots={1} showBorderRight={true} showBorderTop={true} text={'3'} textStyle={styles.buttonText} onPress={(e,i) => this.handleDigitPress(e,3)} />
+                <WWButton slots={1} showBorderRight={true} showBorderTop={true} text={'1'} textStyle={[styles.buttonText,{fontSize:24}]} onPress={(e,i) => this.handleDigitPress(e,1)} />
+              <WWButton slots={1} showBorderRight={true} showBorderTop={true} text={'2'} textStyle={[styles.buttonText,{fontSize:24}]} onPress={(e,i) => this.handleDigitPress(e,2)} />
+              <WWButton slots={1} showBorderRight={true} showBorderTop={true} text={'3'} textStyle={[styles.buttonText,{fontSize:24}]} onPress={(e,i) => this.handleDigitPress(e,3)} />
               <View style={styles.dateDisplay}>
                 <Text style={styles.dateDisplayText}>{this.prettyPrint()}</Text>
               </View>
             </View>
             <View style={[styles.buttonRow]}>
-              <WWButton slots={1} showBorderRight={true} showBorderTop={true} text={'4'} textStyle={styles.buttonText} onPress={(e,i) => this.handleDigitPress(e,4)} />
-              <WWButton slots={1} showBorderRight={true} showBorderTop={true} text={'5'} textStyle={styles.buttonText} onPress={(e,i) => this.handleDigitPress(e,5)} />
-              <WWButton slots={1} showBorderRight={true} showBorderTop={true} text={'6'} textStyle={styles.buttonText} onPress={(e,i) => this.handleDigitPress(e,6)} />
+              <WWButton slots={1} showBorderRight={true} showBorderTop={true} text={'4'} textStyle={[styles.buttonText,{fontSize:24}]} onPress={(e,i) => this.handleDigitPress(e,4)} />
+              <WWButton slots={1} showBorderRight={true} showBorderTop={true} text={'5'} textStyle={[styles.buttonText,{fontSize:24}]} onPress={(e,i) => this.handleDigitPress(e,5)} />
+              <WWButton slots={1} showBorderRight={true} showBorderTop={true} text={'6'} textStyle={[styles.buttonText,{fontSize:24}]} onPress={(e,i) => this.handleDigitPress(e,6)} />
               <WWButton slots={1} showBorderRight={true} showBorderTop={true} text={units[0]} textStyle={styles.buttonText} onPress={(e,i) => this.handleUnitPress(e,0)} />
               <WWButton slots={1} showBorderRight={false} showBorderTop={true} text={units[1]} textStyle={styles.buttonText} onPress={(e,i) => this.handleUnitPress(e,1)} />
             </View>
             <View style={[styles.buttonRow]}>
-              <WWButton slots={1} showBorderRight={true} showBorderTop={true} text={'7'} textStyle={styles.buttonText} onPress={(e,i) => this.handleDigitPress(e,7)} />
-              <WWButton slots={1} showBorderRight={true} showBorderTop={true} text={'8'} textStyle={styles.buttonText} onPress={(e,i) => this.handleDigitPress(e,8)} />
-              <WWButton slots={1} showBorderRight={true} showBorderTop={true} text={'9'} textStyle={styles.buttonText} onPress={(e,i) => this.handleDigitPress(e,9)} />
+              <WWButton slots={1} showBorderRight={true} showBorderTop={true} text={'7'} textStyle={[styles.buttonText,{fontSize:24}]} onPress={(e,i) => this.handleDigitPress(e,7)} />
+              <WWButton slots={1} showBorderRight={true} showBorderTop={true} text={'8'} textStyle={[styles.buttonText,{fontSize:24}]} onPress={(e,i) => this.handleDigitPress(e,8)} />
+              <WWButton slots={1} showBorderRight={true} showBorderTop={true} text={'9'} textStyle={[styles.buttonText,{fontSize:24}]} onPress={(e,i) => this.handleDigitPress(e,9)} />
               <WWButton slots={1} showBorderRight={true} showBorderTop={true} text={units[2]} textStyle={styles.buttonText} onPress={(e,i) => this.handleUnitPress(e,2)} />
               <WWButton slots={1} showBorderRight={false} showBorderTop={true} text={units[3]} textStyle={styles.buttonText} onPress={(e,i) => this.handleUnitPress(e,3)} />
 
             </View>
             <View style={[styles.buttonRow]}>
-              <WWButton slots={2} showBorderRight={true} showBorderTop={true} text={'0'} textStyle={styles.buttonText} onPress={(e,i) => this.handleDigitPress(e,0)} />
-              <WWButton slots={1} showBorderRight={true} showBorderTop={true} text={'⌫'} textStyle={styles.buttonText} onPress={(e,i) => this.handleBackPress(e,0)} />
+              <WWButton slots={2} showBorderRight={true} showBorderTop={true} text={'0'} textStyle={[styles.buttonText,{fontSize:24}]} onPress={(e,i) => this.handleDigitPress(e,0)} />
+                <WWButton slots={1} showBorderRight={true} showBorderTop={true} text={'⌫'} textStyle={styles.buttonText} onPress={(e,i) => this.handleBackPress(e,0)} />
               <WWButton slots={1} showBorderRight={true} showBorderTop={true} text={units[4]} textStyle={styles.buttonText} onPress={(e,i) => this.handleUnitPress(e,4)} />
               <WWButton slots={1} showBorderRight={false} showBorderTop={true} text={units[5]} textStyle={styles.buttonText} onPress={(e,i) => this.handleUnitPress(e,5)} />
             </View>
@@ -330,6 +340,9 @@ export default class Whenwhat extends Component {
                 <WWButton slots={1} showBorderRight={true} showBorderTop={true} text={days[2]} textStyle={styles.buttonText} onPress={(e,i) => this.handleDayPress(e,2)} />
                 <WWButton slots={1} showBorderRight={true} showBorderTop={true} text={days[3]} textStyle={styles.buttonText} onPress={(e,i) => this.handleDayPress(e,3)} />
                 <WWButton slots={1} showBorderRight={false} showBorderTop={true} text={days[4]} textStyle={styles.buttonText} onPress={(e,i) => this.handleDayPress(e,4)} />
+                
+                
+                
             </View>
             <View style={[styles.buttonRow]}>
               <WWButton slots={1} showBorderRight={true} showBorderTop={true} text={days[5]} textStyle={styles.buttonText} onPress={(e,i) => this.handleDayPress(e,5)} />
@@ -345,32 +358,51 @@ export default class Whenwhat extends Component {
                 format="YYYY-MM-DD HH:mm"
                 onDateChange={this.onDateChange}
               />
+                
             </View>
-            <AnimatedOverlay
-              backgroundColor={'white'}
-              opacity={0.9}
-              onPress={this.closeOverlay}
-              overlayShow={this.state.overlayShow}
-            />
+
+              <AnimatedOverlay
+                backgroundColor={'white'}
+                opacity={0.8}
+                onPress={this.closeOverlay}
+                overlayShow={this.state.overlayShow}
+                children={<Text>touch here to set "when"</Text>}
+              />
+
+              <FadeInOut
+                style={[styles.fadeInOut,{}]}
+                ref={instance => { this._animated = instance; }}
+                children={<Text style={{color:'darkorange',fontSize:30}}>mail sent</Text>}
+              />  
+              
+
+
               
           </View>
+
           <View style={styles.x1b}>
             
                 <TouchableHighlight onPress={(e,i) => this.handleSettingsPress(e,0)} underlayColor={lightOrange} activeOpacity={0.5}>
-                <Image source={require('./img/gearwhite64x64.png')} style={{width: 40, height: 40}}/>
+                <Image source={require('./img/gearwhite64x64.png')} style={{marginLeft:14, width: 40, height: 40}}/>
             </TouchableHighlight>
             <TouchableHighlight onPress={(e,i) => this.handleInfoPress(e,0)} underlayColor={lightOrange} activeOpacity={0.5}>
-                <Image source={require('./img/infowhite64x64.png')} style={{width: 40, height: 40}}/>
+                <Image source={require('./img/infowhite64x64.png')} style={{marginRight:14, width: 40, height: 40}}/>
             </TouchableHighlight>
                 
           <AnimatedOverlay
                 backgroundColor={'white'}
-                opacity={0.9}
+                opacity={0.8}
                 onPress={this.closeOverlay}
                 overlayShow={this.state.overlayShow}
           />
+              
+                
+                
+                
           </View>
+                
         </View>
+                
       </View>
     );
   }
@@ -388,7 +420,7 @@ const styles = StyleSheet.create({
 
   buttonText: {
     color: 'darkorange',
-    fontSize: 16,
+    fontSize: 17,
     //textAlign:'content', //doesn't make any difference
   },
   
@@ -414,7 +446,7 @@ const styles = StyleSheet.create({
 
   dateDisplayText: {
     textAlign: 'center',
-    fontSize: 16,
+    fontSize: 18,
   },
    
 
@@ -423,6 +455,9 @@ const styles = StyleSheet.create({
     backgroundColor:'white',
     flexDirection: 'row',
     justifyContent: 'space-between',
+        
+    //alignItems: 'center',
+    
   },
 
   x1b: {
@@ -440,9 +475,17 @@ const styles = StyleSheet.create({
   x: {
     flex:0.09,
     backgroundColor:'white',
+
+    flexDirection: 'row',
+
+
+
   },
   y: {
     flex:0.07,
+
+    flexDirection: 'row',
+    alignItems: 'center',
     backgroundColor:lightOrange,
   },
   z: {
@@ -452,8 +495,9 @@ const styles = StyleSheet.create({
   
   whenwhat: {
     color:'orange',
-    fontSize:32, //height seems to bo 20% more than fontSize. max 40 works on iphone 5
+    fontSize:36, //height seems to bo 20% more than fontSize. max 40 works on iphone 5
     marginLeft:14,
+    alignSelf:'center',
   },
   
   
@@ -480,7 +524,7 @@ const styles = StyleSheet.create({
     margin: 10,
   },
   
-  overlay: { //should go in separate overaly file
+  overlay: { //should go in separate overalay file
     flex: 1,
     top: 0,
     left: 0,
@@ -489,13 +533,19 @@ const styles = StyleSheet.create({
   
   fadeInOut: {
     flex:1,
+    flexDirection: 'column',
     position:'absolute',
-    left: 0,
+    top:10,
+    left: Dimensions.get('window').width/2-200/2,
     width: 200,
-    height: 100,
-    backgroundColor: 'orange',
+    height: 200,
+    borderColor:'orange',
+    borderWidth: 2,
+    backgroundColor: 'white',
     alignItems: 'center',
     justifyContent: 'center',
+
+    borderRadius: 10,
     
   },  
   
@@ -652,6 +702,7 @@ class FadeInOut extends Component {
   fadeIn() {
     Animated.timing(this.state.opacity, {
       toValue:1,
+      delay: 400,
       duration:900,
     }).start(()=>{
         this.fadeOut();
@@ -661,7 +712,7 @@ class FadeInOut extends Component {
   fadeOut() {
     Animated.timing(this.state.opacity, {
       toValue:0,
-      delay: 700,
+      delay: 1700,
       duration:900,
     }).start(()=>{
         //this.fadeIn();
@@ -672,10 +723,11 @@ class FadeInOut extends Component {
     const { style, children } = this.props;
     const opacity = { opacity: this.state.opacity };
     return (
-      <Animated.View style={[style, opacity]}>
-        <View style={[style]}>
+      <Animated.View 
+        style={[style, opacity]}
+        pointerEvents={'none'}
+      >
           {children}
-        </View>
       </Animated.View>
     );
   }
