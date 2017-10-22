@@ -9,10 +9,11 @@
 /* kvar att göra
 ipad kvadratanpassning
 ej tillåta snurra på iphone
-kugghjul
-i-knapp
-touch here to set when
-spara sms-inställning
+layout settings
+text och layout instructions
+layout touch here to set when
+breda linjer mellan knappa på ipad
+keyboard dismiss problem på ipad?
 
 */
 
@@ -37,6 +38,8 @@ import {
   Image,
   NativeModules,
   AsyncStorage,
+  Button,
+  Switch,
 } from 'react-native';
 
 //npm install --save react-navigation
@@ -48,7 +51,37 @@ import {
 import DatePicker from 'react-native-datepicker'
 import Moment from 'moment';
 
+let smsGlobal=false;
 
+const {width:screenwidth, height:screenheight}=Dimensions.get('window');
+const maxDim=Math.max(screenheight,screenwidth); //width if landscape, height if portrait
+const minDim=Math.min(screenheight,screenwidth); //width if portrait, height if landscape
+const isPhone=((maxDim/minDim)>(4.5/3) ? true : false);
+console.log("maxdim",maxDim,"mindim",minDim,"isphone",isPhone);
+
+
+const getOrientation = () => (
+  Dimensions.get('window').width>Dimensions.get('window').height ? 'LANDSCAPE' : 'PORTRAIT'
+);
+
+  
+
+
+const getSms = () => {
+  //true if sms is activated
+  //only reads global variable
+  return smsGlobal;
+}
+
+const setSms = (value) => {
+  //sets both global variable and storage
+  AsyncStorage.setItem('sms', value ? 'on':'off'); //
+  smsGlobal = value; 
+}
+
+const smsStorageToGlobal = () => {
+  AsyncStorage.getItem('sms').then((value) => {smsGlobal = (value==='on' ? true : false)});
+}
 
 
 let locale = NativeModules.SettingsManager.settings.AppleLocale.replace('_','-');
@@ -72,7 +105,15 @@ const daysLong = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday',
 const units = ['minute','hour','day','week','month','year'];
 const unitsPlural = ['minutes','hours','days','weeks','months','years'];
 
-export default class Whenwhat extends Component {
+export default class MainView extends Component {
+  
+  static navigationOptions = {
+    title: 'Whenwhat',
+    //gesturesEnabled: false,
+    header: null,
+  };
+  
+  
   
   constructor(props) {
     super(props);
@@ -86,6 +127,9 @@ export default class Whenwhat extends Component {
       date: null,
       overlayShow: false,
     };
+    
+    smsStorageToGlobal();
+    
     this.handleDigitPress=this.handleDigitPress.bind(this);
     this.handleUnitPress=this.handleUnitPress.bind(this);
     this.handleDayPress=this.handleDayPress.bind(this);
@@ -99,6 +143,12 @@ export default class Whenwhat extends Component {
     this.focus = this.focus.bind(this);
     this.resetStates = this.resetStates.bind(this);
     
+  }
+  
+  componentDidMount() {
+    console.log('Main View did mount and ugly global is '+smsGlobal);
+    setTimeout(()=>{console.log('Main View mounted a while ago and ugly global is '+smsGlobal)},1000);
+
   }
 
   openOverlay() {
@@ -185,6 +235,9 @@ export default class Whenwhat extends Component {
     } else {
       formal='notvalid';
     }
+    if (getSms()) {
+      formal = formal + '-sms';
+    }
     return formal;
   }
 
@@ -198,11 +251,15 @@ export default class Whenwhat extends Component {
   }
   
   handleSettingsPress(e,i) {
-    this.setState({logtext:'gear'});
+    const { navigate } = this.props.navigation;
+    navigate('Settings');
+    
   }
 
   handleInfoPress(e,i) {
-    this.setState({logtext:'info'});
+    const { navigate } = this.props.navigation;
+    navigate('Instructions',{'key1':'value1','key2':'value2'});
+
   }
 
   sendButtonDimmed() {
@@ -229,8 +286,6 @@ export default class Whenwhat extends Component {
             } else {
               if (event=="sent") {
                 this.fadeInOutParent();
-                //AlertIOS.alert('Mail', 'Sent successfully');
-                //xxx ersätt med animation, se https://facebook.github.io/react-native/docs/animations.html och kanske https://facebook.github.io/react-native/releases/0.33/docs/animations.html och https://medium.com/react-native-training/react-native-animations-using-the-animated-api-ebe8e0669fae
                 this.resetStates();
               } else if (event=="cancelled") {
                 //do nothing
@@ -257,6 +312,14 @@ export default class Whenwhat extends Component {
   fadeInOutParent() {
     this._animated.fadeInOutChild();
   }
+  
+  /*
+  onNavigationStateChange(prevState, newState, action) {
+    console.log("navigation state change");
+  }
+  */
+  
+  
   
   render() {
     return (
@@ -293,7 +356,7 @@ export default class Whenwhat extends Component {
             <View style={styles.x}>
           
             
-              <Text style={styles.whenwhat}>When</Text>
+              <Text style={styles.whenwhat}>What</Text>
                 
               <AnimatedOverlay
                 backgroundColor={'white'}
@@ -366,7 +429,7 @@ export default class Whenwhat extends Component {
                 opacity={0.8}
                 onPress={this.closeOverlay}
                 overlayShow={this.state.overlayShow}
-                children={<Text>touch here to set "when"</Text>}
+                children={<Text>enter delay time</Text>}
               />
 
               <FadeInOut
@@ -412,10 +475,12 @@ const styles = StyleSheet.create({
   
   buttonRow: {
     //flex:1,
-    height:Math.floor((Dimensions.get('window').height-24)/6/2+0.99),
+    height:Math.floor(((isPhone?maxDim:minDim)-24)/6/2+0.99),
     flexDirection:'row',
     margin:0,
-    backgroundColor:'white',
+    backgroundColor:'yellow', //white
+    
+    opacity: 0.9,
   },
 
   buttonText: {
@@ -432,6 +497,8 @@ const styles = StyleSheet.create({
     //borderTopWidth:StyleSheet.hairlineWidth,
     backgroundColor:'white',
     borderColor: 'darkorange',
+    
+    opacity: 0.9,
   },
 
 
@@ -452,70 +519,86 @@ const styles = StyleSheet.create({
 
   x1a: {
     flex:0.09,
-    backgroundColor:'white',
+    backgroundColor:'green',//'white',
     flexDirection: 'row',
     justifyContent: 'space-between',
         
     //alignItems: 'center',
     
+    
+    opacity: 0.9,
   },
 
   x1b: {
     flex:0.23,
-    backgroundColor:lightOrange,
+    backgroundColor:'red',//lightOrange,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-end',
     //alignSelf: 'flex-end',
     //position: 'absolute',
     //bottom: 0,
+    
+    opacity: 0.0,
+    
   },
   
   
   x: {
     flex:0.09,
-    backgroundColor:'white',
-
+    backgroundColor:'steelblue',//'white',
     flexDirection: 'row',
 
-
-
+    
+    opacity: 0.9,
   },
   y: {
     flex:0.07,
-
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor:lightOrange,
+    backgroundColor:'lightyellow',//lightOrange,
+    
+    
+    opacity: 0.9,
   },
   z: {
     flex:0.5,
-    backgroundColor:'white',
+    backgroundColor:'blue',//'white',
+    
+    opacity: 0.9,
   },
   
   whenwhat: {
-    color:'orange',
+    color:'black',//'orange',
     fontSize:36, //height seems to bo 20% more than fontSize. max 40 works on iphone 5
     marginLeft:14,
     alignSelf:'center',
+    
+    opacity: 0.9,
   },
   
   
   container: {
     flex:1,
 
-    //justifyContent: 'center',
-    //alignItems: 'center',
+    justifyContent: 'center',
+    alignItems: 'center',
 
 
     backgroundColor:'white',
+    
+    opacity: 0.9,
   },
   
   subContainer: {//adjust for status bar on
-    flex:1,
+    //flex:1,
+    height:(isPhone?maxDim:minDim)-24,
+    width:minDim,
     //alignItems:'center',
     marginTop:24, //Environment.statusBarHeight, 
-    backgroundColor:lightOrange,
+    backgroundColor:'darkred',//lightOrange,
+    
+    opacity: 0.9,
   },  
   
   welcome: {
@@ -536,7 +619,7 @@ const styles = StyleSheet.create({
     flexDirection: 'column',
     position:'absolute',
     top:10,
-    left: Dimensions.get('window').width/2-200/2,
+    left: minDim/2-200/2,
     width: 200,
     height: 200,
     borderColor:'orange',
@@ -552,15 +635,103 @@ const styles = StyleSheet.create({
   
 });
 
-AppRegistry.registerComponent('Whenwhat', () => Whenwhat);
+
+class SettingsView extends React.Component {
+  static navigationOptions = {
+    title: 'Settings',
+  };
+  
+  constructor(props) {
+    super(props)
+    this.state = {
+      smsSwitch: getSms(),
+    }
+  }
+
+  toggleSmsSwitch(value) {
+    this.setState({smsSwitch:value});
+    setSms(value);
+  }
+
+  render () {
+    return (
+      <View>
+        <Text>sms-reminder</Text>
+    <Switch 
+      onValueChange={(value) => this.toggleSmsSwitch(value)} 
+      value={ this.state.smsSwitch } 
+    />
+      
+      </View>
+    )
+  }
+}
+
+class InstructionsView extends React.Component {
+  static navigationOptions = {
+    title: 'Instructions',
+  };
+  
+  constructor(props) {
+    super(props);
+  }
+  
+  componentDidMount() {
+  }
+
+
+  render () {
+    return (
+      <View>
+        <Text>Instructions</Text>
+       </View>
+    )
+  }
+}
+
+
+const MainNavigator = StackNavigator(
+  {
+    //Start: { screen: StartScreen },
+    Main: { screen: MainView },
+    Settings: { screen: SettingsView },
+    Instructions: { screen: InstructionsView },
+
+  },{
+    //headerMode:'none' //use header for each navigator instead
+  }
+);
+
+
+AppRegistry.registerComponent('Whenwhat', () => MainNavigator);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 class WWButton extends Component {
 //flex:this.props.slots
     
   
   render() {
-    let width=this.props.slots*Math.floor(Dimensions.get('window').width/5+0.99);
-    let height=Math.floor((Dimensions.get('window').height-24)/6/2);
+    let width=this.props.slots*Math.floor(minDim/5+0.99);
+    let height=Math.floor((maxDim-24)/6/2);
 
     const borderRightWidth=this.props.showBorderRight ? StyleSheet.hairlineWidth : 0;
     const borderLeftWidth=this.props.showBorderLeft ? StyleSheet.hairlineWidth : 0;
@@ -659,7 +830,7 @@ class AnimatedOverlay extends Component {
     const backgroundColor = { backgroundColor: this.props.backgroundColor };
     const opacity = { opacity: this.state.opacity };
     const size = {
-      width: Dimensions.get('window').width,
+      width: Dimensions.get('window').width, //xxx check
       height: Dimensions.get('window').height
     };
 
