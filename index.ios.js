@@ -2,6 +2,7 @@
 layout settings
 text och layout instructions
 layout touch here to set when
+överväg att kunna trycka knappar och ha tangentbord samtidigt....... iallafall på iphone 6 och uppåt
 
 */
 
@@ -49,6 +50,7 @@ const buttonRowContainerFlex=0.55;
 const gearInfoContainerFlex=1-(whatContainerFlex+textInputContainerFlex+whenContainerFlex+buttonRowContainerFlex);
 const numberOfButtonRows=6;
 const subContainerHeight=(isPhone?maxDim:minDim)-24;
+const subContainerWidth=minDim;
 const buttonRowHeight=Math.floor(((isPhone?maxDim:minDim)-24)/numberOfButtonRows*buttonRowContainerFlex);
 const buttonWidth=Math.floor(minDim/5+0.5);
 
@@ -540,11 +542,9 @@ const styles = StyleSheet.create({
     backgroundColor:'white',
   },
   
-  subContainer: {//adjust for status bar on
-    //flex:1,
+  subContainer: {//adjust for status bar on top
     height:subContainerHeight,
-    width:minDim,
-    //alignItems:'center',
+    width:subContainerWidth,
     marginTop:24, //Environment.statusBarHeight, 
     backgroundColor:lightOrange,
   },  
@@ -555,10 +555,12 @@ const styles = StyleSheet.create({
     margin: 10,
   },
   
-  overlay: { //should go in separate overalay file
+  overlay: {
     flex: 1,
     top: 0,
     left: 0,
+    height:0.1*subContainerHeight, //xxx
+    width:0.1*subContainerWidth, //xxx
     position: 'absolute',
   },
   
@@ -755,19 +757,15 @@ class AnimatedOverlay extends Component {
     const { onPress, style, children } = this.props;
     const backgroundColor = { backgroundColor: this.props.backgroundColor };
     const opacity = { opacity: this.state.opacity };
-    const size = {
-      width: Dimensions.get('window').width, //xxx check
-      height: Dimensions.get('window').height
-    };
 
     if (!pointerEvents) pointerEvents = this.state.overlayShow ? 'auto' : 'none';
 
     return (
       <Animated.View
         pointerEvents={pointerEvents}
-        style={[styles.overlay, backgroundColor, size, style, opacity]}
+        style={[styles.overlay, backgroundColor, style, opacity]}
       >
-        <TouchableOpacity onPress={onPress} style={[styles.overlay, size]} />
+        <TouchableOpacity onPress={onPress} style={[styles.overlay]} />
         {children}
       </Animated.View>
     );
