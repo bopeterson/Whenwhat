@@ -1,27 +1,8 @@
-/**
- * Sample React Native App
- * https://github.com/facebook/react-native
- * @flow
- */
-/*
-*/
-
 /* kvar att göra
-ipad kvadratanpassning
-ej tillåta snurra på iphone
 layout settings
 text och layout instructions
 layout touch here to set when
-breda linjer mellan knappa på ipad
-keyboard dismiss problem på ipad?
 
-återställ färger och ta bort en massa opacity=0.9, sätt ev till variabel testopacity
-
-*/
-
-
-/*
-    UIColor *lightorange=[UIColor colorWithRed:254.0/255.0 green:179.0/255.0 blue:110.0/255.0 alpha:1]; '#FEB36E', //ligth orange
 */
 
 import React, { Component } from 'react';
@@ -61,15 +42,15 @@ const minDim=Math.min(screenheight,screenwidth); //width if portrait, height if 
 const isPhone=((maxDim/minDim)>(4.5/3) ? true : false);
 console.log("maxdim",maxDim,"mindim",minDim,"isphone",isPhone);
 
-
-//xxx testvariabler och utskrifter
-console.log("subcontainer height:"+((isPhone?maxDim:minDim)-24));
-console.log("button row height:"+Math.floor(((isPhone?maxDim:minDim)-24)/6/2));
-const subcontainerheight=(isPhone?maxDim:minDim)-24;
-const buttonrowheight=Math.floor(((isPhone?maxDim:minDim)-24)/6/2);
-const buttonwidth1=1*Math.floor(minDim/5+0.5);
-const buttonwidth2=2*Math.floor(minDim/5+0.99);
-const dims=""+maxDim+" "+minDim+" "+ subcontainerheight + " " +buttonrowheight+" "+buttonwidth1 +" "+buttonwidth2;
+const whatContainerFlex=0.09;
+const textInputContainerFlex=0.07;
+const whenContainerFlex=whatContainerFlex;
+const buttonRowContainerFlex=0.55;
+const gearInfoContainerFlex=1-(whatContainerFlex+textInputContainerFlex+whenContainerFlex+buttonRowContainerFlex);
+const numberOfButtonRows=6;
+const subContainerHeight=(isPhone?maxDim:minDim)-24;
+const buttonRowHeight=Math.floor(((isPhone?maxDim:minDim)-24)/numberOfButtonRows*buttonRowContainerFlex);
+const buttonWidth=Math.floor(minDim/5+0.5);
 
 const getOrientation = () => (
   Dimensions.get('window').width>Dimensions.get('window').height ? 'LANDSCAPE' : 'PORTRAIT'
@@ -123,8 +104,6 @@ export default class MainView extends Component {
     //gesturesEnabled: false,
     header: null,
   };
-  
-  
   
   constructor(props) {
     super(props);
@@ -336,25 +315,13 @@ export default class MainView extends Component {
     return (
       <View style={styles.container}>
         <View style={styles.subContainer}>
-
-
-
-      
           <View style={styles.whatContainer}>
-
-
-      
-      
             <Text style={[styles.whenwhat]}>{'What'}</Text>
-
-    
-
-            
             <WWButton slots={2} showBorderLeft={true} showBorderRight={true} showBorderTop={true} showBorderBottom={true} text={'follow up'} dimmed={this.sendButtonDimmed()} textStyle={styles.buttonText} onPress={(e,i) => this.sendMail()} />
           </View>
             <View style={styles.textInputContainer}>
               <TextInput
-                style={{flex:1,fontSize:22, borderColor: 'transparent', borderLeftWidth: 14,borderRightWidth: 14, }}
+                style={styles.textInput}
                 onChangeText={(text) => this.setState({text})}
                 autoFocus={true}
                 onBlur={()=>this.closeOverlay()}
@@ -365,20 +332,15 @@ export default class MainView extends Component {
               />
             </View>
             <View style={styles.whenContainer}>
-          
-            
               <Text style={styles.whenwhat}>When</Text>
-                
               <AnimatedOverlay
                 backgroundColor={'white'}
                 opacity={0.8}
                 onPress={this.closeOverlay}
                 overlayShow={this.state.overlayShow}
               />
-                
           </View>
           <View style={styles.buttonRowContainer}>
-                
             <View style={[styles.buttonRow]}>
                 <WWButton slots={1} showBorderLeft={true} showBorderTop={true} text={'1'} textStyle={[styles.buttonText,{fontSize:24}]} onPress={(e,i) => this.handleDigitPress(e,1)} />
               <WWButton slots={1} showBorderLeft={true} showBorderTop={true} text={'2'} textStyle={[styles.buttonText,{fontSize:24}]} onPress={(e,i) => this.handleDigitPress(e,2)} />
@@ -392,31 +354,28 @@ export default class MainView extends Component {
               <WWButton slots={1} showBorderLeft={true} showBorderTop={true} text={'5'} textStyle={[styles.buttonText,{fontSize:24}]} onPress={(e,i) => this.handleDigitPress(e,5)} />
               <WWButton slots={1} showBorderLeft={true} showBorderTop={true} text={'6'} textStyle={[styles.buttonText,{fontSize:24}]} onPress={(e,i) => this.handleDigitPress(e,6)} />
               <WWButton slots={1} showBorderLeft={true} showBorderTop={true} text={units[0]} textStyle={styles.buttonText} onPress={(e,i) => this.handleUnitPress(e,0)} />
-              <WWButtonxxx slots={1} showBorderLeft={true} showBorderTop={true} showBorderRight={true} text={units[1]} textStyle={styles.buttonText} onPress={(e,i) => this.handleUnitPress(e,1)} />
+              <WWButton slots={0} showBorderLeft={true} showBorderTop={true} showBorderRight={true} text={units[1]} textStyle={styles.buttonText} onPress={(e,i) => this.handleUnitPress(e,1)} />
             </View>
             <View style={[styles.buttonRow]}>
               <WWButton slots={1} showBorderLeft={true} showBorderTop={true} text={'7'} textStyle={[styles.buttonText,{fontSize:24}]} onPress={(e,i) => this.handleDigitPress(e,7)} />
               <WWButton slots={1} showBorderLeft={true} showBorderTop={true} text={'8'} textStyle={[styles.buttonText,{fontSize:24}]} onPress={(e,i) => this.handleDigitPress(e,8)} />
               <WWButton slots={1} showBorderLeft={true} showBorderTop={true} text={'9'} textStyle={[styles.buttonText,{fontSize:24}]} onPress={(e,i) => this.handleDigitPress(e,9)} />
               <WWButton slots={1} showBorderLeft={true} showBorderTop={true} text={units[2]} textStyle={styles.buttonText} onPress={(e,i) => this.handleUnitPress(e,2)} />
-              <WWButtonxxx slots={1} showBorderLeft={true} showBorderTop={true} showBorderRight={true} text={units[3]} textStyle={styles.buttonText} onPress={(e,i) => this.handleUnitPress(e,3)} />
+              <WWButton slots={0} showBorderLeft={true} showBorderTop={true} showBorderRight={true} text={units[3]} textStyle={styles.buttonText} onPress={(e,i) => this.handleUnitPress(e,3)} />
 
             </View>
             <View style={[styles.buttonRow]}>
               <WWButton slots={2} showBorderLeft={true} showBorderTop={true} text={'0'} textStyle={[styles.buttonText,{fontSize:24}]} onPress={(e,i) => this.handleDigitPress(e,0)} />
               <WWButton slots={1} showBorderLeft={true} showBorderTop={true} text={'⌫'} textStyle={styles.buttonText} onPress={(e,i) => this.handleBackPress(e,0)} />
               <WWButton slots={1} showBorderLeft={true} showBorderTop={true} text={units[4]} textStyle={styles.buttonText} onPress={(e,i) => this.handleUnitPress(e,4)} />
-              <WWButtonxxx slots={1} showBorderLeft={true} showBorderTop={true} showBorderRight={true} text={units[5]} textStyle={styles.buttonText} onPress={(e,i) => this.handleUnitPress(e,5)} />
+              <WWButton slots={0} showBorderLeft={true} showBorderTop={true} showBorderRight={true} text={units[5]} textStyle={styles.buttonText} onPress={(e,i) => this.handleUnitPress(e,5)} />
             </View>
             <View style={[styles.buttonRow]}>
                 <WWButton slots={1} showBorderLeft={true} showBorderTop={true} text={days[0]} textStyle={styles.buttonText} onPress={(e,i) => this.handleDayPress(e,0)} />
                 <WWButton slots={1} showBorderLeft={true} showBorderTop={true} text={days[1]} textStyle={styles.buttonText} onPress={(e,i) => this.handleDayPress(e,1)} />
                 <WWButton slots={1} showBorderLeft={true} showBorderTop={true} text={days[2]} textStyle={styles.buttonText} onPress={(e,i) => this.handleDayPress(e,2)} />
                 <WWButton slots={1} showBorderLeft={true} showBorderTop={true} text={days[3]} textStyle={styles.buttonText} onPress={(e,i) => this.handleDayPress(e,3)} />
-                <WWButtonxxx slots={1} showBorderLeft={true} showBorderTop={true} showBorderRight={true} text={days[4]} textStyle={styles.buttonText} onPress={(e,i) => this.handleDayPress(e,4)} />
-                
-                
-                
+                <WWButton slots={0} showBorderLeft={true} showBorderTop={true} showBorderRight={true} text={days[4]} textStyle={styles.buttonText} onPress={(e,i) => this.handleDayPress(e,4)} />
             </View>
             <View style={[styles.buttonRow]}>
               <WWButton slots={1} showBorderLeft={true} showBorderTop={true} text={days[5]} textStyle={styles.buttonText} onPress={(e,i) => this.handleDayPress(e,5)} />
@@ -433,78 +392,45 @@ export default class MainView extends Component {
                 placeholder="custom"
                 onDateChange={this.onDateChange}
               />
-                
             </View>
-
               <AnimatedOverlay
                 backgroundColor={'white'}
                 opacity={0.8}
                 onPress={this.closeOverlay}
                 overlayShow={this.state.overlayShow}
-                children={<Text>{dims} Enter delay time</Text>}
+                children={<Text pointerEvents={'none'} style={styles.overlayText}>schedule time</Text>}
               />
-
               <FadeInOut
                 style={[styles.fadeInOut,{}]}
                 ref={instance => { this._animated = instance; }}
                 children={<Text style={{color:'darkorange',fontSize:30}}>mail sent</Text>}
-              />  
-              
-
-
-              
+              />
           </View>
-
           <View style={styles.gearInfoContainer}>
-            
                 <TouchableHighlight onPress={(e,i) => this.handleSettingsPress(e,0)} underlayColor={lightOrange} activeOpacity={0.5}>
                 <Image source={require('./img/gearwhite64x64.png')} style={{marginBottom:10, marginLeft:14, width: 40, height: 40}}/>
             </TouchableHighlight>
             <TouchableHighlight onPress={(e,i) => this.handleInfoPress(e,0)} underlayColor={lightOrange} activeOpacity={0.5}>
                 <Image source={require('./img/infowhite64x64.png')} style={{marginBottom:10, marginRight:14, width: 40, height: 40}}/>
             </TouchableHighlight>
-                
           <AnimatedOverlay
                 backgroundColor={'white'}
                 opacity={0.8}
                 onPress={this.closeOverlay}
                 overlayShow={this.state.overlayShow}
           />
-              
-                
-                
-                
           </View>
-                
         </View>
-                
       </View>
     );
   }
 }
 
-/*
-what 0.09
-textinput 0.07
-when 0.09
-buttonrowcontainer 0.5
-gearinfocontainer 0.25
-
-0.09+0.07+0.09+0.5+0.24 = 0,99
-
-*/
-const whatContainerFlex=0.09;
-const textInputContainerFlex=0.07;
-const whenContainerFlex=whatContainerFlex;
-const buttonRowContainerFlex=0.55;
-const gearInfoContainerFlex=1-(whatContainerFlex+textInputContainerFlex+whenContainerFlex+buttonRowContainerFlex);
-const numberOfButtonRows=6;
-
 const styles = StyleSheet.create({
   
   buttonRow: {
     //flex:1,
-    height:Math.floor(((isPhone?maxDim:minDim)-24)/numberOfButtonRows*buttonRowContainerFlex),
+    height:buttonRowHeight,
     flexDirection:'row',
     margin:0,
     backgroundColor:'white',
@@ -575,6 +501,22 @@ const styles = StyleSheet.create({
     backgroundColor:lightOrange,
   },
   
+  textInput: {
+    flex:1,
+    fontSize:22, 
+    borderColor: 'transparent', 
+    borderLeftWidth: 14,
+    borderRightWidth: 14, 
+  },
+
+  overlayText: {
+    fontSize: 22,
+    marginLeft: 14,
+    marginTop:14,
+    opacity: 0.75,
+  },
+
+  
   buttonRowContainer: {
     flex:buttonRowContainerFlex,
     backgroundColor:lightOrange,
@@ -600,7 +542,7 @@ const styles = StyleSheet.create({
   
   subContainer: {//adjust for status bar on
     //flex:1,
-    height:(isPhone?maxDim:minDim)-24,
+    height:subContainerHeight,
     width:minDim,
     //alignItems:'center',
     marginTop:24, //Environment.statusBarHeight, 
@@ -620,11 +562,12 @@ const styles = StyleSheet.create({
     position: 'absolute',
   },
   
+  
   fadeInOut: {
     flex:1,
     flexDirection: 'column',
     position:'absolute',
-    top:10,
+    top:-30,
     left: minDim/2-200/2,
     width: 200,
     height: 200,
@@ -635,10 +578,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
 
     borderRadius: 10,
-    
   },  
-  
-  
+
 });
 
 
@@ -695,7 +636,6 @@ class InstructionsView extends React.Component {
   }
 }
 
-
 const MainNavigator = StackNavigator(
   {
     //Start: { screen: StartScreen },
@@ -708,58 +648,16 @@ const MainNavigator = StackNavigator(
   }
 );
 
-
-AppRegistry.registerComponent('Whenwhat', () => MainNavigator);
-
-
-
-
-
-
-
-
-
-
-
-
-
-class WWButtonxxx extends Component {
-//flex:this.props.slots
-    
-  
-  render() {
-    let width=this.props.slots*buttonwidth1; //xxx Math.floor(minDim/5+0.99);
-
-    const borderRightWidth=this.props.showBorderRight ? StyleSheet.hairlineWidth : 0;
-    const borderLeftWidth=this.props.showBorderLeft ? StyleSheet.hairlineWidth : 0;
-    const borderTopWidth=this.props.showBorderTop ? StyleSheet.hairlineWidth : 0;
-    const borderBottomWidth=this.props.showBorderBottom ? StyleSheet.hairlineWidth : 0;
-    
-    const opacity=this.props.dimmed ? 0.1 : 1.0;
-    const onPress=this.props.dimmed ? null : this.props.onPress;
-
-    return (
-                <TouchableHighlight style={[{flex:1,borderLeftWidth:borderLeftWidth,borderRightWidth:borderRightWidth,borderTopWidth:borderTopWidth,borderBottomWidth:borderBottomWidth,opacity:opacity},styles.button]} onPress={onPress} underlayColor={'#FFFFFF'} activeOpacity={0.5}>
-                <Text style={this.props.textStyle}>{this.props.text}</Text>
-              </TouchableHighlight>
-      
-    )
-  }
-}
-
-
-
-
-
-
-
-
 class WWButton extends Component {
-//flex:this.props.slots
-    
-  
+
+  //slots=0: use flex 1, for the rightmost buttons to fill the remaining space
   render() {
-    let width=this.props.slots*buttonwidth1; //xxx Math.floor(minDim/5+0.99);
+    if (this.props.slots==0) {
+      //flex=1;
+      widthstyle={flex:1};
+    } else {
+      widthstyle={width:this.props.slots*buttonWidth};
+    }
 
     const borderRightWidth=this.props.showBorderRight ? StyleSheet.hairlineWidth : 0;
     const borderLeftWidth=this.props.showBorderLeft ? StyleSheet.hairlineWidth : 0;
@@ -770,7 +668,7 @@ class WWButton extends Component {
     const onPress=this.props.dimmed ? null : this.props.onPress;
 
     return (
-                <TouchableHighlight style={[{width:width,borderLeftWidth:borderLeftWidth,borderRightWidth:borderRightWidth,borderTopWidth:borderTopWidth,borderBottomWidth:borderBottomWidth,opacity:opacity},styles.button]} onPress={onPress} underlayColor={'#FFFFFF'} activeOpacity={0.5}>
+                <TouchableHighlight style={[widthstyle,{borderLeftWidth:borderLeftWidth,borderRightWidth:borderRightWidth,borderTopWidth:borderTopWidth,borderBottomWidth:borderBottomWidth,opacity:opacity},styles.button]} onPress={onPress} underlayColor={'#FFFFFF'} activeOpacity={0.5}>
                 <Text style={this.props.textStyle}>{this.props.text}</Text>
               </TouchableHighlight>
       
@@ -911,7 +809,7 @@ class FadeInOut extends Component {
   fadeOut() {
     Animated.timing(this.state.opacity, {
       toValue:0,
-      delay: 1700,
+      delay: 2200,
       duration:900,
     }).start(()=>{
         //this.fadeIn();
@@ -931,4 +829,6 @@ class FadeInOut extends Component {
     );
   }
 }
+
+AppRegistry.registerComponent('Whenwhat', () => MainNavigator);
 
