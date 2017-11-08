@@ -1,21 +1,62 @@
 /* kvar att göra
-layout settings
-text och layout instructions
 
-byt set och infoknappar till kugghjul och i (som måste göras orangea)
-
-testa ipadlayout
-testa iphone 5/SE
+text och layout instructions se https://facebook.github.io/react-native/docs/text.html
 
 fixa så att tangentbord inte försvinner efter custom
 
-byt ut retur mot skicka i tangentbordet
+retinaanpassa info och gearicon
 
-top bar iphone x
+ev förbättra isX med
+import DeviceInfo from 'react-native-device-info';
+// getModel: iPhone X
+// getDeviceId: iPhone10,3
+const ModelIphoneX = 'iPhone X';
 
-portrait ipad
+rensa gamla stylesheets måttkonstanter som inte används
 
-kanske ha vit status på iphone, men inte på ipad? 
+överväg att ta bort followup-knappen nu när det finns en returknapp. kanske ska stå when what där, eller custom bredare. gjort om till when what knapp. dimma inte, men disabla  om man inte har något ämne, eller låt den alltid gå till instructions, eller disabla alltid!!!
+
+byt namn på funktionen sendbuttondimmed
+
+alternativ lösning: DrawerNavigation-fast då nollställs allt, och det är ju inte meningen...
+
+    this.props.navigation.goBack();//navigate('DrawerClose');
+
+
+//screen A
+import {DeviceEventEmitter} from 'react-native'
+componentWillMount() {
+    DeviceEventEmitter.addListener('your listener', (e)=>{})
+}
+//may be you need componentShouldUpdate
+
+//screenB
+DeviveEventEmitter.emit('your listener',  {})
+
+
+//ScreenA...
+goBAction = () => {
+   const {navigation} = this.props;
+   navigation.navigate('B', {refresh: refreshFunction});
+}
+refreshFunction = () => {
+   //do refresh
+}
+
+//ScreenB...
+goBackAAction = () => {
+    const {navigation} = this.props;
+    const {state} = navigation;
+    let refreshFunc = state.refresh;
+if(typeof refreshFunc === 'function'){
+    refreshFunc();
+}
+   navigation.goBack();
+}
+får inte det att funka....
+
+även svar från 349989153 i https://github.com/react-community/react-navigation/issues/51
+om onNavigationStateChange
 
 */
 
@@ -39,11 +80,15 @@ import {
   Switch,
   KeyboardAvoidingView,
   StatusBar,
+  ScrollView,
+  Linking,
+  DeviceEventEmitter,
 } from 'react-native';
 
 //npm install --save react-navigation
 import { 
   StackNavigator,
+  //DrawerNavigator,
   NavigationActions,
 } from 'react-navigation';
 
@@ -55,7 +100,8 @@ let smsGlobal=false;
 const {width:screenwidth, height:screenheight}=Dimensions.get('window');
 const maxDim=Math.max(screenheight,screenwidth); //width if landscape, height if portrait
 const minDim=Math.min(screenheight,screenwidth); //width if portrait, height if landscape
-const isPhone=((maxDim/minDim)>(4.5/3) ? true : false);
+const isPhone=((maxDim/minDim)>(4.5/3));
+const isX=(isPhone && maxDim>800);
 console.log("maxdim",maxDim,"mindim",minDim,"isphone",isPhone);
 
 const whenwhatContainerFlex=0.07;//0.09;
@@ -113,6 +159,8 @@ const daysLong = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday',
 const units = ['minute','hour','day','week','month','year'];
 const unitsPlural = ['minutes','hours','days','weeks','months','years'];
 
+
+
 export default class MainView extends Component {
   
   static navigationOptions = {
@@ -131,7 +179,6 @@ export default class MainView extends Component {
       day: 0,
       unit: 0,
       date: null,
-      overlayShow: false,
     };
     
     smsStorageToGlobal();
@@ -145,8 +192,6 @@ export default class MainView extends Component {
     this.handleSettingsPress=this.handleSettingsPress.bind(this);
     this.handleInfoPress=this.handleInfoPress.bind(this);
     this.onDateChange=this.onDateChange.bind(this);
-    this.openOverlay = this.openOverlay.bind(this);
-    this.closeOverlay = this.closeOverlay.bind(this);
     this.fadeInOutParent = this.fadeInOutParent.bind(this);
     this.focus = this.focus.bind(this);
     this.resetStates = this.resetStates.bind(this);
@@ -156,10 +201,14 @@ export default class MainView extends Component {
     
   }
   
+  componentWillMount() {
+    DeviceEventEmitter.addListener('settingsClosed', (e)=>{this.focus();console.log('settings closed')});
+    DeviceEventEmitter.addListener('instructionsClosed', (e)=>{this.focus();console.log('instructions closed')});
+  }
+  
   componentDidMount() {
-    console.log('Main View did mount and ugly global is '+smsGlobal);
     setTimeout(()=>{console.log('Main View mounted a while ago and ugly global is '+smsGlobal)},1000);
-
+    
   }
 
   keyboardDidShow (e) {
@@ -167,21 +216,13 @@ export default class MainView extends Component {
       console.log(height)
   }
 
-  openOverlay() {
-    this.setState({ overlayShow: true });
-  }
 
-  closeOverlay() {
-    if (this._textInput.isFocused()) {
-      Keyboard.dismiss(); //detta funkar inte rakt av, 
-      this.setState({logtext:'dismissing'});
-    }
-    this.setState({ overlayShow: false });
-  }
   
   onDateChange(date) {
     console.log('ondatechange');
+    
     this.setState({category:'CUSTOM',date: date});
+    this.focus();
   }
   
   handleDigitPress(e,i) {
@@ -277,8 +318,9 @@ export default class MainView extends Component {
   }
 
   handleInfoPress(e,i) {
+    
     const { navigate } = this.props.navigation;
-    navigate('Instructions',{'key1':'value1','key2':'value2'});
+    navigate('Instructions');
 
   }
 
@@ -325,7 +367,6 @@ export default class MainView extends Component {
         day: 0,
         unit: 0,
         date: null,
-        overlayShow: false,
       }
     )
     this.focus();
@@ -375,7 +416,7 @@ export default class MainView extends Component {
   render() {
     return (
       <View style={styles.container}>
-      <View style={{height:24,backgroundColor:'transparent'}} />
+      <View style={styles.statusBar} />
       
       
       
@@ -393,6 +434,7 @@ export default class MainView extends Component {
         date={this.state.date}
         onDateChange={this.onDateChange}
         dimmed={this.sendButtonDimmed()}
+        disabled={this.sendButtonDimmed()}
         handleFollowUpPress={this.sendMail}
       />
     <FadeInOut
@@ -405,11 +447,14 @@ export default class MainView extends Component {
     <TextInput
       style={[styles.input,{backgroundColor:'white'}]}
       onChangeText={(text) => this.setState({text:text})}
+      onSubmitEditing={this.sendMail}
       autoFocus={true}
-      onBlur={()=>this.closeOverlay()}
-      onFocus={()=>this.openOverlay()}
+      onBlur={()=>(console.log('keyboard lost focus'))}
+      onFocus={()=>(console.log('keyboard focused'))}
       value={this.state.text}
       placeholder={'enter subject'}
+      returnKeyType={'send'}
+      enablesReturnKeyAutomatically={true}
       ref={instance => { this._textInput = instance; }}
     />
   </KeyboardAvoidingView>
@@ -422,6 +467,12 @@ export default class MainView extends Component {
 }
 
 const styles = StyleSheet.create({
+  statusBar: {
+    height:(isX?40:20), //although the statusbar is only 30px on iphone X
+    backgroundColor:(isPhone?'white':'transparent'),
+  }, 
+  
+  
   form: {
     flex: 1,
     justifyContent: 'flex-end',
@@ -587,21 +638,33 @@ class SettingsView extends React.Component {
     }
   }
 
+  componentWillUnmount() {
+    console.log("settings just unmounted");
+    DeviceEventEmitter.emit('settingsClosed', {})
+  }
+
+
   toggleSmsSwitch(value) {
     this.setState({smsSwitch:value});
-    setSms(value);
+    setSms(value);    
   }
 
   render () {
     return (
-      <View>
-        <Text>sms-reminder</Text>
-    <Switch 
-      onValueChange={(value) => this.toggleSmsSwitch(value)} 
-      value={ this.state.smsSwitch } 
-    />
+      <View style={{flex:1,backgroundColor:lightOrange}}>
+        <View style={{padding:30,justifyContent:'space-between',alignItems:'center',flexDirection:'row',backgroundColor:'rgba(255,255,255,0.2)'}}>
+          <Text style={{fontWeight:'bold'}}>use sms reminders </Text>
+          <Switch 
+            onValueChange={(value) => this.toggleSmsSwitch(value)} 
+            value={ this.state.smsSwitch } 
       
+          />
+        </View>
+        <View style={{flex:1}}>
+        </View>
       </View>
+      
+      
     )
   }
 }
@@ -613,17 +676,70 @@ class InstructionsView extends React.Component {
   
   constructor(props) {
     super(props);
+    this.handleLinkPress = this.handleLinkPress.bind(this);
   }
   
   componentDidMount() {
+  
+
   }
+  
+  componentWillUnmount() {
+    console.log("instructions just unmounted");
+    
+    DeviceEventEmitter.emit('instructionsClosed', {})
+    
+  }
+  
+  
+  handleLinkPress(e,url) {
+     Linking.openURL(url).catch(err => console.error('An error occurred', err));
+  }
+  
 
 
   render () {
+    
+    const xxx = StyleSheet.create({
+      xxx:{
+        width: undefined,
+        resizeMode: 'contain',
+        //backgroundColor:'rgba(191,183,120,0.2)',
+      }
+    });
     return (
-      <View>
-        <Text>Instructions</Text>
-       </View>
+      <ScrollView style={{backgroundColor:'white'}}>
+        <View style={{padding:10, backgroundColor:'rgba(191,183,120,0.4)'}}>
+          <Text><Text style={{fontWeight:'bold'}}>Whenwhat </Text> will help you prepare emails for <Text style={{fontStyle:'italic'}}>followupthen</Text>, a free and easy to use email reminder service. First, make sure your device is set up for sending emails. If not, go to the device{"'"}s settings and add an email account.</Text>
+        </View>
+        <View style={{padding:10, backgroundColor:'rgba(191,183,120,0.45)'}}>
+          <Text><Text style={{fontWeight:'bold'}}>Enter the subject</Text> of your reminder, for example <Text style={{fontStyle:'italic'}}>Buy milk</Text>, <Text style={{fontStyle:'italic'}}>Renew cat insurance</Text> or <Text style={{fontStyle:'italic'}}>Cancel Showflix subscription</Text></Text>
+        </View>
+        <View style={{padding:0, backgroundColor:'rgba(191,183,120,0.5)'}}>
+          <Image resizeMode={'contain'} style={[xxx.xxx,{height:140}]} source={require('./img/infoimg1.png')} />
+        </View>      
+        <View style={{padding:10, backgroundColor:'rgba(191,183,120,0.55)'}}>
+          <Text><Text style={{fontWeight:'bold'}}>Tap the buttons</Text> to schedule when in the future you want your reminder, for example <Text style={{fontStyle:'italic'}}>Tomorrow</Text>, on <Text style={{fontStyle:'italic'}}>Monday</Text>, or in <Text style={{fontStyle:'italic'}}>20 days</Text>. You can also tap <Text style={{fontStyle:'italic'}}>Custom</Text> to select any time and date. If no time is set, it defaults to 0 minutes (immediately)</Text>
+        </View>
+
+        <View style={{padding:0, backgroundColor:'rgba(191,183,120,0.5)'}}>
+          <Image resizeMode={'contain'} style={[xxx.xxx,{height:140}]} source={require('./img/infoimg1.png')} />
+        </View>      
+
+
+        <View style={{padding:10, backgroundColor:'rgba(191,183,120,0.6)'}}>
+          <Text><Text style={{fontWeight:'bold'}}>Tap </Text><Text style={{fontStyle:'italic',fontWeight:'bold'}}>follow up</Text> in the upper right corner or <Text style={{fontStyle:'italic',fontWeight:'bold'}}>send</Text> on the keyboard to schedule the reminder. xxx bara på tangentbord, följt av send</Text>
+        </View>
+        <View style={{padding:10, backgroundColor:'rgba(191,183,120,0.65)'}}>
+      <Text><Text style={{fontWeight:'bold'}}>Finished!</Text> An email will remind you at the selected time. If it is the first time you use the service of Followupthen, you will get a welcome message that asks you to verify your email address. Please check your inbox for this welcome message and follow the verification instructions. You will also get a confirmation email for every reminder you schedule. These confirmations can be turned off at <Text style={{textDecorationLine:'underline'}} onPress={(e) => this.handleLinkPress(e,'https://www.followupthen.com')}>followupthen.com</Text></Text>
+        </View>
+        <View style={{padding:10, backgroundColor:'rgba(191,183,120,0.7)'}}>
+          <Text>Detailed instructions and more information can be found at <Text style={{textDecorationLine:'underline'}} onPress={(e) => this.handleLinkPress(e,'http://asynkronix.se/whenwhat')}>Asynkronix</Text></Text>
+        </View>
+        <View style={{padding:10, backgroundColor:'rgba(191,183,120,0.75)'}}>
+          <Text>Please note that this app is in no way affiliated with followupthen, but it does require their excellent free service. Read more about them at <Text style={{textDecorationLine:'underline'}} onPress={(e) => this.handleLinkPress(e,'https://www.followupthen.com')}>followupthen.com</Text></Text>
+        </View>
+      </ScrollView>
     )
   }
 }
@@ -641,7 +757,6 @@ const MainNavigator = StackNavigator(
 );
 
 class WWButton extends Component {
-
   //slots=0: use flex 1, for the rightmost buttons to fill the remaining space
   render() {
     if (this.props.width.a==0) {
@@ -650,18 +765,19 @@ class WWButton extends Component {
     } else {
       widthstyle={width:this.props.width.a*Math.floor(minDim/this.props.width.b+0.5)};
     }
-
+    
+      
     const borderRightWidth=this.props.showBorderRight ? StyleSheet.hairlineWidth : 0;
     const borderLeftWidth=this.props.showBorderLeft ? StyleSheet.hairlineWidth : 0;
     const borderTopWidth=this.props.showBorderTop ? StyleSheet.hairlineWidth : 0;
     const borderBottomWidth=this.props.showBorderBottom ? StyleSheet.hairlineWidth : 0;
     
     const opacity=this.props.dimmed ? 0.3 : 1.0;
-    const onPress=this.props.dimmed ? null : this.props.onPress;
+    const onPress=this.props.disabled ? null : this.props.onPress;
 
     return (
                 <TouchableHighlight style={[widthstyle,{borderLeftWidth:borderLeftWidth,borderRightWidth:borderRightWidth,borderTopWidth:borderTopWidth,borderBottomWidth:borderBottomWidth},styles.button]} onPress={onPress} underlayColor={'#FFFFFF'} activeOpacity={0.5}>
-                <Text style={[{opacity:opacity},this.props.textStyle]}>{this.props.text}</Text>
+                {this.props.image?<Image source={this.props.image}/>:<Text style={[{opacity:opacity},this.props.textStyle]}>{this.props.text}</Text>}
               </TouchableHighlight>
       
     )
@@ -694,7 +810,13 @@ class ButtonRowContainer extends Component {
     />
     
     
-      <WWButton width={{a:0,b:42}} showBorderLeft={true} showBorderRight={true} showBorderTop={true} showBorderBottom={false} text={'follow up'} dimmed={this.props.dimmed} textStyle={styles.buttonText} onPress={(e,i) => this.props.handleFollowUpPress()} />
+    <WWButton width={{a:0,b:42}} showBorderLeft={true} showBorderTop={true} showBorderRight={true} text={'When\nWhat'} disabled={this.props.disabled} textStyle={[styles.buttonText,{fontSize:20,textAlign:'center'}]} onPress={(e,i) => this.props.handleFollowUpPress()} />
+    
+    
+    {/*<WWButton width={{a:0,b:42}} showBorderLeft={true} showBorderRight={true} showBorderTop={true} showBorderBottom={false} text={'follow up'} dimmed={this.props.dimmed} textStyle={styles.buttonText} onPress={(e,i) => this.props.handleFollowUpPress()} />*/}
+
+
+
   </View>
   <View style={[styles.buttonRow]}>
     <WWButton width={{a:8,b:42}} showBorderLeft={true} showBorderTop={true} text={'4'} textStyle={[styles.buttonText,{fontSize:20}]} onPress={(e,i) => this.props.handleDigitPress(e,4)} />
@@ -702,6 +824,12 @@ class ButtonRowContainer extends Component {
     <WWButton width={{a:8,b:42}} showBorderLeft={true} showBorderTop={true} text={'6'} textStyle={[styles.buttonText,{fontSize:20}]} onPress={(e,i) => this.props.handleDigitPress(e,6)} />
     <WWButton width={{a:9,b:42}} showBorderLeft={true} showBorderTop={true} text={units[0]} textStyle={styles.buttonText} onPress={(e,i) => this.props.handleUnitPress(e,0)} />
     <WWButton width={{a:0,b:42}} showBorderLeft={true} showBorderTop={true} showBorderRight={true} text={units[1]} textStyle={styles.buttonText} onPress={(e,i) => this.props.handleUnitPress(e,1)} />
+    
+    
+    
+    
+    
+    
   </View>
   <View style={[styles.buttonRow]}>
     <WWButton width={{a:8,b:42}} showBorderLeft={true} showBorderTop={true} text={'7'} textStyle={[styles.buttonText,{fontSize:20}]} onPress={(e,i) => this.props.handleDigitPress(e,7)} />
@@ -736,8 +864,8 @@ class ButtonRowContainer extends Component {
     <WWButton width={{a:12,b:42}} showBorderLeft={true} showBorderTop={true} text={days[7]} textStyle={styles.buttonText} onPress={(e,i) => this.props.handleDayPress(e,7)} />
     
 
-      <WWButton width={{a:6,b:42}} showBorderLeft={true} showBorderTop={true} text={'set'} textStyle={styles.buttonText} onPress={(e,i) => this.props.handleSettingsPress(e,0)} />
-      <WWButton width={{a:6,b:42}} showBorderLeft={true} showBorderTop={true} text={'info'} textStyle={styles.buttonText} onPress={(e,i) => this.props.handleInfoPress(e,0)} />
+      <WWButton width={{a:6,b:42}} showBorderLeft={true} showBorderTop={true} image={require('./img/gearorange24x24.png')} text={'set'} textStyle={styles.buttonText} onPress={(e,i) => this.props.handleSettingsPress(e,0)} />
+      <WWButton width={{a:6,b:42}} showBorderLeft={true} showBorderTop={true} image={require('./img/infoorange24x24.png')} text={'info'} textStyle={styles.buttonText} onPress={(e,i) => this.props.handleInfoPress(e,0)} />
 
 
       
