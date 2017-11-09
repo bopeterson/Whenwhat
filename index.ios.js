@@ -305,9 +305,10 @@ export default class MainView extends Component {
           console.log("event: "+JSON.stringify(event,null,4));
                     
             if(error) {
-              AlertIOS.alert('Error', 'Not configured to send email');
+              this.fadeInOutParent();//xxxxx
+              //AlertIOS.alert('Error', 'Not configured to send email');
               console.log('mail error');
-              this.focus();
+              this.focus();//xxx kanske sätt timer fast inte jätteviktigt...
             } else {
               if (event=="sent") {
                 this.fadeInOutParent();
@@ -341,88 +342,70 @@ export default class MainView extends Component {
   fadeInOutParent() {
     this._animated.fadeInOutChild();
   }
-  
-  
-  
-/*  
-        <View style={styles.subContainer}>
-          <View style={styles.whenwhatContainer}>
-            <Text style={[styles.whenwhat]}>{'Whenwhat'}</Text>
-            <WWButton width={{a:2,b:7}} showBorderLeft={true} showBorderRight={true} showBorderTop={true} showBorderBottom={true} text={'follow up'} dimmed={this.sendButtonDimmed()} textStyle={styles.buttonText} onPress={(e,i) => this.sendMail()} />
-          </View>
-          <ButtonRowContainer date={this.state.date}/>
-        </View>
 
-  */
-  
-//          <ButtonRowContainer date={this.state.date}/>
-//      <KeyboardAvoidingView behavior="padding" style={[styles.form,{backgroundColor:'pink'}]}>
-
-  
   render() {
     return (
       <View style={styles.container}>
-      <View style={styles.statusBar} />
-      
-      
-      
-        
-      <KeyboardAvoidingView behavior="padding" style={[styles.form]}>
-    <View style={{flex:1}}>
-      <ButtonRowContainer 
-        handleDigitPress={this.handleDigitPress} 
-        handleUnitPress={this.handleUnitPress} 
-        handleDayPress={this.handleDayPress} 
-        handleBackPress={this.handleBackPress} 
-        handleSettingsPress={this.handleSettingsPress} 
-        handleInfoPress={this.handleInfoPress}
-        prettyPrint={this.prettyPrint}
-        date={this.state.date}
-        onDateChange={this.onDateChange}
-        dimmed={this.sendButtonDimmed()}
-        disabled={this.sendButtonDimmed()}
-        handleFollowUpPress={this.sendMail}
-      />
-    <FadeInOut
-        style={[styles.fadeInOut,{}]}
-        ref={instance => { this._animated = instance; }}
-        children={<Text style={{color:'darkorange',fontSize:30}}>mail sent</Text>}
-    />
-        
-    </View>
-    <TextInput
-      style={[styles.input,{backgroundColor:'white'}]}
-      onChangeText={(text) => this.setState({text:text})}
-      onSubmitEditing={this.sendMail}
-      autoFocus={true}
-      onBlur={()=>(console.log('keyboard lost focus'))}
-      onFocus={()=>(console.log('keyboard focused'))}
-      value={this.state.text}
-      placeholder={'enter subject'}
-      returnKeyType={'send'}
-      enablesReturnKeyAutomatically={true}
-      ref={instance => { this._textInput = instance; }}
-    />
-  </KeyboardAvoidingView>
-
+        <View style={styles.statusBar} />
+        <KeyboardAvoidingView behavior="padding" style={[styles.keyboardAvoidingView]}>
+          {/*<View style={{flex:1}}>*/}
+            <ButtonRowContainer 
+              handleDigitPress={this.handleDigitPress} 
+              handleUnitPress={this.handleUnitPress} 
+              handleDayPress={this.handleDayPress} 
+              handleBackPress={this.handleBackPress} 
+              handleSettingsPress={this.handleSettingsPress} 
+              handleInfoPress={this.handleInfoPress}
+              prettyPrint={this.prettyPrint}
+              date={this.state.date}
+              onDateChange={this.onDateChange}
+              dimmed={this.sendButtonDimmed()}
+              disabled={this.sendButtonDimmed()}
+              handleFollowUpPress={this.sendMail}
+            />
+            <FadeInOut
+                style={[styles.fadeInOut,{}]}
+                ref={instance => { this._animated = instance; }}
+                children={<Text style={{color:'darkorange',fontSize:30}}>mail sent</Text>}
+            />
+          {/*</View>*/}
+          <TextInput
+            style={[styles.input]}
+            onChangeText={(text) => this.setState({text:text})}
+            onSubmitEditing={this.sendMail}
+            autoFocus={true}
+            onBlur={()=>(console.log('keyboard lost focus'))}
+            onFocus={()=>(console.log('keyboard focused'))}
+            value={this.state.text}
+            placeholder={'enter subject'}
+            returnKeyType={'send'}
+            enablesReturnKeyAutomatically={true}
+            ref={instance => { this._textInput = instance; }}
+          />
+        </KeyboardAvoidingView>
       </View>
-      
-      
     );
   }
 }
 
 const styles = StyleSheet.create({
+  container: {
+    flex:1,
+    width:minDim,
+    alignSelf:'center',
+  },
+
   statusBar: {
     height:(isX?40:20), //although the statusbar is only 30px on iphone X
-    backgroundColor:(isPhone?'red':'transparent'),
+    backgroundColor:(isPhone?'white':'transparent'),
   }, 
-  
-  
-  form: {
+
+  keyboardAvoidingView: {
     flex: 1,
     justifyContent: 'flex-end',
+    backgroundColor: lightOrange,
   },
+  
   input: {
     margin: 14,
     marginBottom: 4,
@@ -432,14 +415,13 @@ const styles = StyleSheet.create({
     borderColor: 'darkorange',
     borderWidth: 1,
     fontSize: 16,
+    backgroundColor:'white',
   },
 
   buttonRow: {
     flex:1,
-    //height:buttonRowHeight,
     flexDirection:'row',
     margin:0,
-//    backgroundColor:'rgba(0,0,255,0.9)', //xxx 'white',
   },
 
   buttonText: {
@@ -447,7 +429,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     textAlign:'center', //needed for buttons with multiple lines
   },
-  
   
   button: {
     alignItems:'center',
@@ -457,7 +438,6 @@ const styles = StyleSheet.create({
     borderBottomColor: 'darkorange',
     borderRightColor: 'darkorange',
   },
-
 
   dateDisplay: {
     flex:1,
@@ -478,16 +458,6 @@ const styles = StyleSheet.create({
   buttonRowContainer: {
     flex:1,
     backgroundColor:'white',
-  },
-    
-  
-  container: {
-    flex:1,
-    width:minDim,
-    //justifyContent: 'center',
-    //alignItems: 'center',
-    alignSelf:'center',
-    backgroundColor:lightOrange,
   },
 
   fadeInOut: {
@@ -574,7 +544,6 @@ class InstructionsView extends React.Component {
     DeviceEventEmitter.emit('instructionsClosed', {})
     
   }
-  
   
   handleLinkPress(e,url) {
      Linking.openURL(url).catch(err => console.error('An error occurred', err));
