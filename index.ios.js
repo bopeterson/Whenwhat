@@ -1,9 +1,5 @@
 /* kvar att göra
 
-text och layout instructions se https://facebook.github.io/react-native/docs/text.html
-
-fixa så att tangentbord inte försvinner efter custom
-
 retinaanpassa info och gearicon
 
 ev förbättra isX med
@@ -14,49 +10,12 @@ const ModelIphoneX = 'iPhone X';
 
 rensa gamla stylesheets måttkonstanter som inte används
 
-överväg att ta bort followup-knappen nu när det finns en returknapp. kanske ska stå when what där, eller custom bredare. gjort om till when what knapp. dimma inte, men disabla  om man inte har något ämne, eller låt den alltid gå till instructions, eller disabla alltid!!!
 
 byt namn på funktionen sendbuttondimmed
 
-alternativ lösning: DrawerNavigation-fast då nollställs allt, och det är ju inte meningen...
+bort med xxx
 
-    this.props.navigation.goBack();//navigate('DrawerClose');
-
-
-//screen A
-import {DeviceEventEmitter} from 'react-native'
-componentWillMount() {
-    DeviceEventEmitter.addListener('your listener', (e)=>{})
-}
-//may be you need componentShouldUpdate
-
-//screenB
-DeviveEventEmitter.emit('your listener',  {})
-
-
-//ScreenA...
-goBAction = () => {
-   const {navigation} = this.props;
-   navigation.navigate('B', {refresh: refreshFunction});
-}
-refreshFunction = () => {
-   //do refresh
-}
-
-//ScreenB...
-goBackAAction = () => {
-    const {navigation} = this.props;
-    const {state} = navigation;
-    let refreshFunc = state.refresh;
-if(typeof refreshFunc === 'function'){
-    refreshFunc();
-}
-   navigation.goBack();
-}
-får inte det att funka....
-
-även svar från 349989153 i https://github.com/react-community/react-navigation/issues/51
-om onNavigationStateChange
+bort med console.log
 
 */
 
@@ -336,7 +295,7 @@ export default class MainView extends Component {
   
   sendMail(e) {
     //event argument not used
-
+    Keyboard.dismiss(); //xxx testar om detta hindrar gul varning. verkar så
     Mailer.mail({
       subject: this.state.text,
           recipients: [this.formalTime()+'@followupthen.com'],
@@ -347,12 +306,19 @@ export default class MainView extends Component {
                     
             if(error) {
               AlertIOS.alert('Error', 'Not configured to send email');
+              console.log('mail error');
+              this.focus();
             } else {
               if (event=="sent") {
                 this.fadeInOutParent();
                 this.resetStates();
               } else if (event=="cancelled") {
+                console.log('send mail cancelled');
+                this.focus();
                 //do nothing
+              } else {
+                console.log('???');
+                this.focus();
               }
             }
         });
@@ -377,27 +343,7 @@ export default class MainView extends Component {
   }
   
   
-  /*
-  onNavigationStateChange(prevState, newState, action) {
-    console.log("navigation state change");
-  }
-  */
   
-  
-/* old text input  
-<View style={styles.textInputContainer}>
-  <TextInput
-    style={styles.textInput}
-    onChangeText={(text) => this.setState({text})}
-    autoFocus={true}
-    onBlur={()=>this.closeOverlay()}
-    onFocus={()=>this.openOverlay()}
-    value={this.state.text}
-    placeholder={'enter subject'}
-    ref={instance => { this._textInput = instance; }}
-  />
-</View>
-*/
 /*  
         <View style={styles.subContainer}>
           <View style={styles.whenwhatContainer}>
@@ -421,7 +367,7 @@ export default class MainView extends Component {
       
       
         
-      <KeyboardAvoidingView behavior="padding" style={[styles.form,{backgroundColor:lightOrange}]}>
+      <KeyboardAvoidingView behavior="padding" style={[styles.form]}>
     <View style={{flex:1}}>
       <ButtonRowContainer 
         handleDigitPress={this.handleDigitPress} 
@@ -469,7 +415,7 @@ export default class MainView extends Component {
 const styles = StyleSheet.create({
   statusBar: {
     height:(isX?40:20), //although the statusbar is only 30px on iphone X
-    backgroundColor:(isPhone?'white':'transparent'),
+    backgroundColor:(isPhone?'red':'transparent'),
   }, 
   
   
@@ -493,20 +439,19 @@ const styles = StyleSheet.create({
     //height:buttonRowHeight,
     flexDirection:'row',
     margin:0,
-    backgroundColor:'white',
+//    backgroundColor:'rgba(0,0,255,0.9)', //xxx 'white',
   },
 
   buttonText: {
     color: 'darkorange',
     fontSize: 14,
-    //textAlign:'content', //doesn't make any difference
+    textAlign:'center', //needed for buttons with multiple lines
   },
   
   
   button: {
     alignItems:'center',
     justifyContent: 'center',
-    backgroundColor:'white',
     borderTopColor: 'darkorange',
     borderLeftColor: 'darkorange',
     borderBottomColor: 'darkorange',
@@ -519,7 +464,7 @@ const styles = StyleSheet.create({
     borderColor: 'darkorange',
     borderTopWidth:StyleSheet.hairlineWidth,
     borderLeftWidth:StyleSheet.hairlineWidth,
-    borderRightWidth:StyleSheet.hairlineWidth,
+    //borderRightWidth:StyleSheet.hairlineWidth,
     alignItems:'center',
     justifyContent: 'center',
     backgroundColor:lightOrange,
@@ -529,49 +474,12 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     fontSize: 16,
   },
-
-  whenwhatContainer: {
-    flex:whenwhatContainerFlex,
-    backgroundColor:'white',
-    flexDirection: 'row',
-    justifyContent: 'space-between',  
-  },
-   
-
-
-  gearInfoContainer: {
-    flex:gearInfoContainerFlex,
-    backgroundColor:lightOrange,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-end',
-    
-  },
-  
-  
-  
-  textInputContainer: {
-    flex:textInputContainerFlex,
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor:lightOrange,
-  },
-  
-
-
   
   buttonRowContainer: {
-    flex:1,//buttonRowContainerFlex,
-    backgroundColor:lightOrange,
+    flex:1,
+    backgroundColor:'white',
   },
-  
-  whenwhat: {
-    color:'orange',
-    fontSize:36, //height seems to bo 20% more than fontSize. max 40 works on iphone 5
-    marginLeft:14,
-    alignSelf:'center',
-  },
-  
+    
   
   container: {
     flex:1,
@@ -579,33 +487,9 @@ const styles = StyleSheet.create({
     //justifyContent: 'center',
     //alignItems: 'center',
     alignSelf:'center',
-    backgroundColor:'transparent',
-  },
-  
-  subContainer: {//adjust for status bar on top
-    flex:1,
-    //height:subContainerHeight,
-    //width:subContainerWidth,
-    //marginTop:24, //Environment.statusBarHeight, 
     backgroundColor:lightOrange,
-  },  
-  
-  welcome: {
-    fontSize: 20,
-    textAlign: 'center',
-    margin: 10,
   },
-  
-  overlay: {
-    flex: 1,
-    top: 0,
-    left: 0,
-    height:0.0*subContainerHeight, //xxx
-    width:subContainerWidth, //xxx
-    position: 'absolute',
-  },
-  
-  
+
   fadeInOut: {
     flex:1,
     flexDirection: 'column',
@@ -810,7 +694,7 @@ class ButtonRowContainer extends Component {
     />
     
     
-    <WWButton width={{a:0,b:42}} showBorderLeft={true} showBorderTop={true} showBorderRight={true} text={'When\nWhat'} disabled={this.props.disabled} textStyle={[styles.buttonText,{fontSize:20,textAlign:'center'}]} onPress={(e,i) => this.props.handleFollowUpPress()} />
+    <WWButton width={{a:0,b:42}} showBorderLeft={true} showBorderTop={true} showBorderRight={true} text={'When\nWhat'} disabled={this.props.disabled} textStyle={[styles.buttonText,{fontSize:20}]} onPress={(e,i) => this.props.handleFollowUpPress()} />
     
     
     {/*<WWButton width={{a:0,b:42}} showBorderLeft={true} showBorderRight={true} showBorderTop={true} showBorderBottom={false} text={'follow up'} dimmed={this.props.dimmed} textStyle={styles.buttonText} onPress={(e,i) => this.props.handleFollowUpPress()} />*/}
@@ -861,11 +745,11 @@ class ButtonRowContainer extends Component {
       
   </View>
   <View style={[styles.buttonRow]}>
-    <WWButton width={{a:12,b:42}} showBorderLeft={true} showBorderTop={true} text={days[7]} textStyle={styles.buttonText} onPress={(e,i) => this.props.handleDayPress(e,7)} />
+    <WWButton width={{a:12,b:42}} showBorderLeft={true} showBorderTop={true} showBorderBottom={true} text={days[7]} textStyle={styles.buttonText} onPress={(e,i) => this.props.handleDayPress(e,7)} />
     
 
-      <WWButton width={{a:6,b:42}} showBorderLeft={true} showBorderTop={true} image={require('./img/gearorange24x24.png')} text={'set'} textStyle={styles.buttonText} onPress={(e,i) => this.props.handleSettingsPress(e,0)} />
-      <WWButton width={{a:6,b:42}} showBorderLeft={true} showBorderTop={true} image={require('./img/infoorange24x24.png')} text={'info'} textStyle={styles.buttonText} onPress={(e,i) => this.props.handleInfoPress(e,0)} />
+      <WWButton width={{a:6,b:42}} showBorderLeft={true} showBorderTop={true} showBorderBottom={true} image={require('./img/gearorange24x24.png')} text={'set'} textStyle={styles.buttonText} onPress={(e,i) => this.props.handleSettingsPress(e,0)} />
+      <WWButton width={{a:6,b:42}} showBorderLeft={true} showBorderTop={true} showBorderBottom={true} image={require('./img/infoorange24x24.png')} text={'info'} textStyle={styles.buttonText} onPress={(e,i) => this.props.handleInfoPress(e,0)} />
 
 
       
@@ -882,16 +766,6 @@ class ButtonRowContainer extends Component {
     )
   }
 }
-/*
-    <TouchableHighlight onPress={(e,i) => this.props.handleSettingsPress(e,0)} underlayColor={lightOrange} activeOpacity={0.5} style={{backgroundColor:lightOrange}}>
-      <Image source={require('./img/gearwhite64x64.png')}/>
-    </TouchableHighlight>
-  <TouchableHighlight onPress={(e,i) => this.props.handleInfoPress(e,0)} underlayColor={lightOrange} activeOpacity={0.5} style={{backgroundColor:lightOrange}}>
-      <Image source={require('./img/infowhite64x64.png')}/>
-  </TouchableHighlight>
-*/
-
-
 
 
 class FadeInOut extends Component {
