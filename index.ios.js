@@ -1,21 +1,13 @@
 /* kvar att göra
 
-retinaanpassa info och gearicon
+fixa klart insstructions
+bort med xxx
 
-ev förbättra isX med
+ev i framtiden: förbättra isX med
 import DeviceInfo from 'react-native-device-info';
 // getModel: iPhone X
 // getDeviceId: iPhone10,3
 const ModelIphoneX = 'iPhone X';
-
-rensa gamla stylesheets måttkonstanter som inte används
-
-
-byt namn på funktionen sendbuttondimmed
-
-bort med xxx
-
-bort med console.log
 
 */
 
@@ -61,24 +53,11 @@ const maxDim=Math.max(screenheight,screenwidth); //width if landscape, height if
 const minDim=Math.min(screenheight,screenwidth); //width if portrait, height if landscape
 const isPhone=((maxDim/minDim)>(4.5/3));
 const isX=(isPhone && maxDim>800);
-console.log("maxdim",maxDim,"mindim",minDim,"isphone",isPhone);
-
-const whenwhatContainerFlex=0.07;//0.09;
-const textInputContainerFlex=0.06;//0.07;
-const buttonRowContainerFlex=0.55;
-const gearInfoContainerFlex=1-(whenwhatContainerFlex+textInputContainerFlex+buttonRowContainerFlex);
-const numberOfButtonRows=6;
-const subContainerHeight=(isPhone?maxDim:minDim)-24;
-const subContainerWidth=minDim;
-const buttonRowHeight=0.1*Math.floor(((isPhone?maxDim:minDim)-24)/numberOfButtonRows*buttonRowContainerFlex);
-const buttonWidth=Math.floor(minDim/5+0.5);
+//console.log("maxdim",maxDim,"mindim",minDim,"isphone",isPhone);
 
 const getOrientation = () => (
   Dimensions.get('window').width>Dimensions.get('window').height ? 'LANDSCAPE' : 'PORTRAIT'
 );
-
-  
-
 
 const getSms = () => {
   //true if sms is activated
@@ -96,18 +75,9 @@ const smsStorageToGlobal = () => {
   AsyncStorage.getItem('sms').then((value) => {smsGlobal = (value==='on' ? true : false)});
 }
 
-
 let locale = NativeModules.SettingsManager.settings.AppleLocale.replace('_','-');
-console.log(locale);
-console.log(NativeModules.SettingsManager.settings);
-
-
-//https://facebook.github.io/react-native/releases/0.27/docs/datepickerios.html
-//<DatePickerIOS></DatePickerIOS>
-//även 
-//https://github.com/xgfe/react-native-datepicker/blob/master/index.android.js
-
-//var Mailer = require('react-native-mail');
+//console.log(locale);
+//console.log(NativeModules.SettingsManager.settings);
 
 var Mailer = require('NativeModules').RNMail;
 
@@ -117,8 +87,6 @@ const days = ['mon','tue','wed','thu','fri','sat','sun','tomorrow'];
 const daysLong = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday','tomorrow'];
 const units = ['minute','hour','day','week','month','year'];
 const unitsPlural = ['minutes','hours','days','weeks','months','years'];
-
-
 
 export default class MainView extends Component {
   
@@ -142,8 +110,6 @@ export default class MainView extends Component {
     
     smsStorageToGlobal();
     
-    
-    
     this.handleDigitPress=this.handleDigitPress.bind(this);
     this.handleUnitPress=this.handleUnitPress.bind(this);
     this.handleDayPress=this.handleDayPress.bind(this);
@@ -155,31 +121,26 @@ export default class MainView extends Component {
     this.focus = this.focus.bind(this);
     this.resetStates = this.resetStates.bind(this);
     this.prettyPrint = this.prettyPrint.bind(this);
-    this.sendButtonDimmed = this.sendButtonDimmed.bind(this);
+    this.disableSend = this.disableSend.bind(this);
     this.sendMail=this.sendMail.bind(this);
-    
   }
   
   componentWillMount() {
-    DeviceEventEmitter.addListener('settingsClosed', (e)=>{this.focus();console.log('settings closed')});
-    DeviceEventEmitter.addListener('instructionsClosed', (e)=>{this.focus();console.log('instructions closed')});
+    DeviceEventEmitter.addListener('settingsClosed', (e)=>{this.focus()});
+    DeviceEventEmitter.addListener('instructionsClosed', (e)=>{this.focus();});
   }
   
   componentDidMount() {
-    setTimeout(()=>{console.log('Main View mounted a while ago and ugly global is '+smsGlobal)},1000);
-    
   }
 
   keyboardDidShow (e) {
-      const { height, screenX, screenY, width } = e.endCoordinates.height
-      console.log(height)
+      //const { height, screenX, screenY, width } = e.endCoordinates.height
+      //console.log(height)
   }
 
 
   
   onDateChange(date) {
-    console.log('ondatechange');
-    
     this.setState({category:'CUSTOM',date: date});
     this.focus();
   }
@@ -187,7 +148,6 @@ export default class MainView extends Component {
   handleDigitPress(e,i) {
     let digit=this.state.digit;
     let category=this.state.category;
-    console.log("button "+i+" pressed");
     //set digit to zero if day or custom was selected right before. otherwise old digit would be concatenated to pressed digit
     if (category != 'DIGITUNIT') {
         digit=0;
@@ -205,7 +165,6 @@ export default class MainView extends Component {
       this.setState({digit:1});
     }
     this.setState({category:'DIGITUNIT',unit:i});
-    console.log("unit pressed: "+i);
   }
 
 
@@ -246,7 +205,7 @@ export default class MainView extends Component {
       }
     } else if (category=='CUSTOM') {
       //use format 1124pm2017-10-28. am/pm acts as separator between time and date
-      //This can also be used 2324.28.Oct.2017
+      //This format could have been used instead: 2324.28.Oct.2017
       const customFormat='hhmmaYYYY-MM-DD';
       formal=Moment(this.state.date).format(customFormat);
     } else if (category=='DAY') {
@@ -260,9 +219,7 @@ export default class MainView extends Component {
     return formal;
   }
 
-
   handleBackPress(e,i) {
-    console.log("backpress");
     if (this.state.category=='DIGITUNIT') {
       this.setState((prevState, props) => ({
         digit: Math.floor(prevState.digit/10)
@@ -273,52 +230,41 @@ export default class MainView extends Component {
   handleSettingsPress(e,i) {
     const { navigate } = this.props.navigation;
     navigate('Settings');
-    
   }
 
   handleInfoPress(e,i) {
-    
     const { navigate } = this.props.navigation;
     navigate('Instructions');
 
   }
 
-  sendButtonDimmed() {
-    console.log("sendbuttondimmed")
+  disableSend() {
     return (this.state.text.length==0);
   }
   
   focus() {
-    console.log(this._textInput.isFocused());
     this._textInput.focus();
   }
   
   sendMail(e) {
     //event argument not used
-    Keyboard.dismiss(); //xxx testar om detta hindrar gul varning. verkar så
+    Keyboard.dismiss(); //takes away yellow animation warning after sent mail
     Mailer.mail({
       subject: this.state.text,
           recipients: [this.formalTime()+'@followupthen.com'],
           body: this.state.text,
           isHTML: false,
         }, (error, event) => {
-          console.log("event: "+JSON.stringify(event,null,4));
-                    
             if(error) {
-              this.fadeInOutParent();//xxxxx
-              //AlertIOS.alert('Error', 'Not configured to send email');
-              console.log('mail error');
-              this.focus();//xxx kanske sätt timer fast inte jätteviktigt...
+              AlertIOS.alert('Error', 'Not configured to send email');
+              this.focus();//not working, might need a timeout
             } else {
               if (event=="sent") {
                 this.fadeInOutParent();
                 this.resetStates();
               } else if (event=="cancelled") {
-                console.log('send mail cancelled');
                 this.focus();
-                //do nothing
               } else {
-                console.log('???');
                 this.focus();
               }
             }
@@ -348,34 +294,30 @@ export default class MainView extends Component {
       <View style={styles.container}>
         <View style={styles.statusBar} />
         <KeyboardAvoidingView behavior="padding" style={[styles.keyboardAvoidingView]}>
-          {/*<View style={{flex:1}}>*/}
-            <ButtonRowContainer 
-              handleDigitPress={this.handleDigitPress} 
-              handleUnitPress={this.handleUnitPress} 
-              handleDayPress={this.handleDayPress} 
-              handleBackPress={this.handleBackPress} 
-              handleSettingsPress={this.handleSettingsPress} 
-              handleInfoPress={this.handleInfoPress}
-              prettyPrint={this.prettyPrint}
-              date={this.state.date}
-              onDateChange={this.onDateChange}
-              dimmed={this.sendButtonDimmed()}
-              disabled={this.sendButtonDimmed()}
-              handleFollowUpPress={this.sendMail}
-            />
-            <FadeInOut
-                style={[styles.fadeInOut,{}]}
-                ref={instance => { this._animated = instance; }}
-                children={<Text style={{color:'darkorange',fontSize:30}}>mail sent</Text>}
-            />
-          {/*</View>*/}
+          <ButtonRowContainer 
+            handleDigitPress={this.handleDigitPress} 
+            handleUnitPress={this.handleUnitPress} 
+            handleDayPress={this.handleDayPress} 
+            handleBackPress={this.handleBackPress} 
+            handleSettingsPress={this.handleSettingsPress} 
+            handleInfoPress={this.handleInfoPress}
+            prettyPrint={this.prettyPrint}
+            date={this.state.date}
+            onDateChange={this.onDateChange}
+            dimmed={this.disableSend()}
+            disabled={this.disableSend()}
+            handleFollowUpPress={this.sendMail}
+          />
+          <FadeInOut
+              style={[styles.fadeInOut,{}]}
+              ref={instance => { this._animated = instance; }}
+              children={<Text style={{color:'darkorange',fontSize:30}}>mail sent</Text>}
+          />
           <TextInput
             style={[styles.input]}
             onChangeText={(text) => this.setState({text:text})}
             onSubmitEditing={this.sendMail}
             autoFocus={true}
-            onBlur={()=>(console.log('keyboard lost focus'))}
-            onFocus={()=>(console.log('keyboard focused'))}
             value={this.state.text}
             placeholder={'enter subject'}
             returnKeyType={'send'}
@@ -476,9 +418,7 @@ const styles = StyleSheet.create({
 
     borderRadius: 10,
   },  
-
 });
-
 
 class SettingsView extends React.Component {
   static navigationOptions = {
@@ -493,10 +433,8 @@ class SettingsView extends React.Component {
   }
 
   componentWillUnmount() {
-    console.log("settings just unmounted");
     DeviceEventEmitter.emit('settingsClosed', {})
   }
-
 
   toggleSmsSwitch(value) {
     this.setState({smsSwitch:value});
@@ -510,8 +448,7 @@ class SettingsView extends React.Component {
           <Text style={{fontWeight:'bold'}}>use sms reminders </Text>
           <Switch 
             onValueChange={(value) => this.toggleSmsSwitch(value)} 
-            value={ this.state.smsSwitch } 
-      
+            value={ this.state.smsSwitch }
           />
         </View>
         <View style={{flex:1}}>
@@ -534,30 +471,21 @@ class InstructionsView extends React.Component {
   }
   
   componentDidMount() {
-  
-
   }
   
   componentWillUnmount() {
-    console.log("instructions just unmounted");
-    
     DeviceEventEmitter.emit('instructionsClosed', {})
-    
   }
   
   handleLinkPress(e,url) {
      Linking.openURL(url).catch(err => console.error('An error occurred', err));
   }
   
-
-
   render () {
-    
-    const xxx = StyleSheet.create({
-      xxx:{
+    const instructionStyles = StyleSheet.create({
+      image:{
         width: undefined,
         resizeMode: 'contain',
-        //backgroundColor:'rgba(191,183,120,0.2)',
       }
     });
     return (
@@ -569,27 +497,27 @@ class InstructionsView extends React.Component {
           <Text><Text style={{fontWeight:'bold'}}>Enter the subject</Text> of your reminder, for example <Text style={{fontStyle:'italic'}}>Buy milk</Text>, <Text style={{fontStyle:'italic'}}>Renew cat insurance</Text> or <Text style={{fontStyle:'italic'}}>Cancel Showflix subscription</Text></Text>
         </View>
         <View style={{padding:0, backgroundColor:'rgba(191,183,120,0.5)'}}>
-          <Image resizeMode={'contain'} style={[xxx.xxx,{height:140}]} source={require('./img/infoimg1.png')} />
+          <Image resizeMode={'contain'} style={[instructionStyles.image,{height:140}]} source={require('./img/infoimg1.png')} />
         </View>      
         <View style={{padding:10, backgroundColor:'rgba(191,183,120,0.55)'}}>
           <Text><Text style={{fontWeight:'bold'}}>Tap the buttons</Text> to schedule when in the future you want your reminder, for example <Text style={{fontStyle:'italic'}}>Tomorrow</Text>, on <Text style={{fontStyle:'italic'}}>Monday</Text>, or in <Text style={{fontStyle:'italic'}}>20 days</Text>. You can also tap <Text style={{fontStyle:'italic'}}>Custom</Text> to select any time and date. If no time is set, it defaults to 0 minutes (immediately)</Text>
         </View>
 
-        <View style={{padding:0, backgroundColor:'rgba(191,183,120,0.5)'}}>
-          <Image resizeMode={'contain'} style={[xxx.xxx,{height:140}]} source={require('./img/infoimg1.png')} />
+        <View style={{padding:0, backgroundColor:'rgba(191,183,120,0.60)'}}>
+          <Image resizeMode={'contain'} style={[instructionStyles.image,{height:140}]} source={require('./img/infoimg1.png')} />
         </View>      
 
 
-        <View style={{padding:10, backgroundColor:'rgba(191,183,120,0.6)'}}>
+        <View style={{padding:10, backgroundColor:'rgba(191,183,120,0.65)'}}>
           <Text><Text style={{fontWeight:'bold'}}>Tap </Text><Text style={{fontStyle:'italic',fontWeight:'bold'}}>follow up</Text> in the upper right corner or <Text style={{fontStyle:'italic',fontWeight:'bold'}}>send</Text> on the keyboard to schedule the reminder. xxx bara på tangentbord, följt av send</Text>
         </View>
-        <View style={{padding:10, backgroundColor:'rgba(191,183,120,0.65)'}}>
+        <View style={{padding:10, backgroundColor:'rgba(191,183,120,0.70)'}}>
       <Text><Text style={{fontWeight:'bold'}}>Finished!</Text> An email will remind you at the selected time. If it is the first time you use the service of Followupthen, you will get a welcome message that asks you to verify your email address. Please check your inbox for this welcome message and follow the verification instructions. You will also get a confirmation email for every reminder you schedule. These confirmations can be turned off at <Text style={{textDecorationLine:'underline'}} onPress={(e) => this.handleLinkPress(e,'https://www.followupthen.com')}>followupthen.com</Text></Text>
         </View>
-        <View style={{padding:10, backgroundColor:'rgba(191,183,120,0.7)'}}>
+        <View style={{padding:10, backgroundColor:'rgba(191,183,120,0.75)'}}>
           <Text>Detailed instructions and more information can be found at <Text style={{textDecorationLine:'underline'}} onPress={(e) => this.handleLinkPress(e,'http://asynkronix.se/whenwhat')}>Asynkronix</Text></Text>
         </View>
-        <View style={{padding:10, backgroundColor:'rgba(191,183,120,0.75)'}}>
+        <View style={{padding:10, backgroundColor:'rgba(191,183,120,0.80)'}}>
           <Text>Please note that this app is in no way affiliated with followupthen, but it does require their excellent free service. Read more about them at <Text style={{textDecorationLine:'underline'}} onPress={(e) => this.handleLinkPress(e,'https://www.followupthen.com')}>followupthen.com</Text></Text>
         </View>
       </ScrollView>
@@ -599,7 +527,6 @@ class InstructionsView extends React.Component {
 
 const MainNavigator = StackNavigator(
   {
-    //Start: { screen: StartScreen },
     Main: { screen: MainView },
     Settings: { screen: SettingsView },
     Instructions: { screen: InstructionsView },
@@ -613,13 +540,11 @@ class WWButton extends Component {
   //slots=0: use flex 1, for the rightmost buttons to fill the remaining space
   render() {
     if (this.props.width.a==0) {
-      //flex=1;
       widthstyle={flex:1};
     } else {
       widthstyle={width:this.props.width.a*Math.floor(minDim/this.props.width.b+0.5)};
     }
     
-      
     const borderRightWidth=this.props.showBorderRight ? StyleSheet.hairlineWidth : 0;
     const borderLeftWidth=this.props.showBorderLeft ? StyleSheet.hairlineWidth : 0;
     const borderTopWidth=this.props.showBorderTop ? StyleSheet.hairlineWidth : 0;
@@ -629,7 +554,7 @@ class WWButton extends Component {
     const onPress=this.props.disabled ? null : this.props.onPress;
 
     return (
-                <TouchableHighlight style={[widthstyle,{borderLeftWidth:borderLeftWidth,borderRightWidth:borderRightWidth,borderTopWidth:borderTopWidth,borderBottomWidth:borderBottomWidth},styles.button]} onPress={onPress} underlayColor={'#FFFFFF'} activeOpacity={0.5}>
+          <TouchableHighlight style={[widthstyle,{borderLeftWidth:borderLeftWidth,borderRightWidth:borderRightWidth,borderTopWidth:borderTopWidth,borderBottomWidth:borderBottomWidth},styles.button]} onPress={onPress} underlayColor={'#FFFFFF'} activeOpacity={0.5}>
                 {this.props.image?<Image source={this.props.image}/>:<Text style={[{opacity:opacity},this.props.textStyle]}>{this.props.text}</Text>}
               </TouchableHighlight>
       
@@ -642,100 +567,72 @@ class ButtonRowContainer extends Component {
   
   render () {
     return (
-<View style={styles.buttonRowContainer}>
-  <View style={[styles.buttonRow]}>
-      <WWButton width={{a:8,b:42}} showBorderLeft={true} showBorderTop={true} text={'1'} textStyle={[styles.buttonText,{fontSize:20}]} onPress={(e,i)=>this.props.handleDigitPress(e,1)} />
-    <WWButton width={{a:8,b:42}} showBorderLeft={true} showBorderTop={true} text={'2'} textStyle={[styles.buttonText,{fontSize:20}]} onPress={(e,i) => this.props.handleDigitPress(e,2)} />
-    <WWButton width={{a:8,b:42}} showBorderLeft={true} showBorderTop={true} text={'3'} textStyle={[styles.buttonText,{fontSize:20}]} onPress={(e,i) => this.props.handleDigitPress(e,3)} />
-    
-    <DatePicker
-      style={[styles.button]}
-      width={{a:9,b:42}}
-      minDim={minDim}
-      customStyles={{textStyle:styles.buttonText}}
-      showBorderLeft={true}
-      showBorderTop={true}
-      showBorderRight={false}
-      date={this.props.date}
-      mode="datetime"
-      placeholder="custom"
-      onDateChange={this.props.onDateChange}
-    />
-    
-    
-    <WWButton width={{a:0,b:42}} showBorderLeft={true} showBorderTop={true} showBorderRight={true} text={'When\nWhat'} disabled={this.props.disabled} textStyle={[styles.buttonText,{fontSize:20}]} onPress={(e,i) => this.props.handleFollowUpPress()} />
-    
-    
-    {/*<WWButton width={{a:0,b:42}} showBorderLeft={true} showBorderRight={true} showBorderTop={true} showBorderBottom={false} text={'follow up'} dimmed={this.props.dimmed} textStyle={styles.buttonText} onPress={(e,i) => this.props.handleFollowUpPress()} />*/}
+      <View style={styles.buttonRowContainer}>
+        <View style={[styles.buttonRow]}>
+          <WWButton width={{a:8,b:42}} showBorderLeft={true} showBorderTop={true} text={'1'} textStyle={[styles.buttonText,{fontSize:20}]} onPress={(e,i)=>this.props.handleDigitPress(e,1)} />
+          <WWButton width={{a:8,b:42}} showBorderLeft={true} showBorderTop={true} text={'2'} textStyle={[styles.buttonText,{fontSize:20}]} onPress={(e,i) => this.props.handleDigitPress(e,2)} />
+          <WWButton width={{a:8,b:42}} showBorderLeft={true} showBorderTop={true} text={'3'} textStyle={[styles.buttonText,{fontSize:20}]} onPress={(e,i) => this.props.handleDigitPress(e,3)} />
+          <DatePicker
+            style={[styles.button]}
+            width={{a:9,b:42}}
+            minDim={minDim}
+            customStyles={{textStyle:styles.buttonText}}
+            showBorderLeft={true}
+            showBorderTop={true}
+            showBorderRight={false}
+            date={this.props.date}
+            mode="datetime"
+            placeholder="custom"
+            onDateChange={this.props.onDateChange}
+          />
+          <WWButton width={{a:0,b:42}} showBorderLeft={true} showBorderTop={true} showBorderRight={true} text={'When\nWhat'} disabled={this.props.disabled} textStyle={[styles.buttonText,{fontSize:20}]} onPress={(e,i) => this.props.handleFollowUpPress()} />
+        </View>
 
+        <View style={[styles.buttonRow]}>
+          <WWButton width={{a:8,b:42}} showBorderLeft={true} showBorderTop={true} text={'4'} textStyle={[styles.buttonText,{fontSize:20}]} onPress={(e,i) => this.props.handleDigitPress(e,4)} />
+          <WWButton width={{a:8,b:42}} showBorderLeft={true} showBorderTop={true} text={'5'} textStyle={[styles.buttonText,{fontSize:20}]} onPress={(e,i) => this.props.handleDigitPress(e,5)} />
+          <WWButton width={{a:8,b:42}} showBorderLeft={true} showBorderTop={true} text={'6'} textStyle={[styles.buttonText,{fontSize:20}]} onPress={(e,i) => this.props.handleDigitPress(e,6)} />
+          <WWButton width={{a:9,b:42}} showBorderLeft={true} showBorderTop={true} text={units[0]} textStyle={styles.buttonText} onPress={(e,i) => this.props.handleUnitPress(e,0)} />
+          <WWButton width={{a:0,b:42}} showBorderLeft={true} showBorderTop={true} showBorderRight={true} text={units[1]} textStyle={styles.buttonText} onPress={(e,i) => this.props.handleUnitPress(e,1)} />
+        </View>
 
+        <View style={[styles.buttonRow]}>
+          <WWButton width={{a:8,b:42}} showBorderLeft={true} showBorderTop={true} text={'7'} textStyle={[styles.buttonText,{fontSize:20}]} onPress={(e,i) => this.props.handleDigitPress(e,7)} />
+          <WWButton width={{a:8,b:42}} showBorderLeft={true} showBorderTop={true} text={'8'} textStyle={[styles.buttonText,{fontSize:20}]} onPress={(e,i) => this.props.handleDigitPress(e,8)} />
+          <WWButton width={{a:8,b:42}} showBorderLeft={true} showBorderTop={true} text={'9'} textStyle={[styles.buttonText,{fontSize:20}]} onPress={(e,i) => this.props.handleDigitPress(e,9)} />
+          <WWButton width={{a:9,b:42}} showBorderLeft={true} showBorderTop={true} text={units[2]} textStyle={styles.buttonText} onPress={(e,i) => this.props.handleUnitPress(e,2)} />
+          <WWButton width={{a:0,b:42}} showBorderLeft={true} showBorderTop={true} showBorderRight={true} text={units[3]} textStyle={styles.buttonText} onPress={(e,i) => this.props.handleUnitPress(e,3)} />
+        </View>
 
-  </View>
-  <View style={[styles.buttonRow]}>
-    <WWButton width={{a:8,b:42}} showBorderLeft={true} showBorderTop={true} text={'4'} textStyle={[styles.buttonText,{fontSize:20}]} onPress={(e,i) => this.props.handleDigitPress(e,4)} />
-    <WWButton width={{a:8,b:42}} showBorderLeft={true} showBorderTop={true} text={'5'} textStyle={[styles.buttonText,{fontSize:20}]} onPress={(e,i) => this.props.handleDigitPress(e,5)} />
-    <WWButton width={{a:8,b:42}} showBorderLeft={true} showBorderTop={true} text={'6'} textStyle={[styles.buttonText,{fontSize:20}]} onPress={(e,i) => this.props.handleDigitPress(e,6)} />
-    <WWButton width={{a:9,b:42}} showBorderLeft={true} showBorderTop={true} text={units[0]} textStyle={styles.buttonText} onPress={(e,i) => this.props.handleUnitPress(e,0)} />
-    <WWButton width={{a:0,b:42}} showBorderLeft={true} showBorderTop={true} showBorderRight={true} text={units[1]} textStyle={styles.buttonText} onPress={(e,i) => this.props.handleUnitPress(e,1)} />
-    
-    
-    
-    
-    
-    
-  </View>
-  <View style={[styles.buttonRow]}>
-    <WWButton width={{a:8,b:42}} showBorderLeft={true} showBorderTop={true} text={'7'} textStyle={[styles.buttonText,{fontSize:20}]} onPress={(e,i) => this.props.handleDigitPress(e,7)} />
-    <WWButton width={{a:8,b:42}} showBorderLeft={true} showBorderTop={true} text={'8'} textStyle={[styles.buttonText,{fontSize:20}]} onPress={(e,i) => this.props.handleDigitPress(e,8)} />
-    <WWButton width={{a:8,b:42}} showBorderLeft={true} showBorderTop={true} text={'9'} textStyle={[styles.buttonText,{fontSize:20}]} onPress={(e,i) => this.props.handleDigitPress(e,9)} />
-    <WWButton width={{a:9,b:42}} showBorderLeft={true} showBorderTop={true} text={units[2]} textStyle={styles.buttonText} onPress={(e,i) => this.props.handleUnitPress(e,2)} />
-    <WWButton width={{a:0,b:42}} showBorderLeft={true} showBorderTop={true} showBorderRight={true} text={units[3]} textStyle={styles.buttonText} onPress={(e,i) => this.props.handleUnitPress(e,3)} />
+        <View style={[styles.buttonRow]}>
+          <WWButton width={{a:16,b:42}} showBorderLeft={true} showBorderTop={true} text={'0'} textStyle={[styles.buttonText,{fontSize:20}]} onPress={(e,i) => this.props.handleDigitPress(e,0)} />
+          <WWButton width={{a:8,b:42}} showBorderLeft={true} showBorderTop={true} text={'⌫'} textStyle={styles.buttonText} onPress={(e,i) => this.props.handleBackPress(e,0)} />
+          <WWButton width={{a:9,b:42}} showBorderLeft={true} showBorderTop={true} text={units[4]} textStyle={styles.buttonText} onPress={(e,i) => this.props.handleUnitPress(e,4)} />
+          <WWButton width={{a:0,b:42}} showBorderLeft={true} showBorderTop={true} showBorderRight={true} text={units[5]} textStyle={styles.buttonText} onPress={(e,i) => this.props.handleUnitPress(e,5)} />
+        </View>
 
-  </View>
-  <View style={[styles.buttonRow]}>
-    <WWButton width={{a:16,b:42}} showBorderLeft={true} showBorderTop={true} text={'0'} textStyle={[styles.buttonText,{fontSize:20}]} onPress={(e,i) => this.props.handleDigitPress(e,0)} />
-    <WWButton width={{a:8,b:42}} showBorderLeft={true} showBorderTop={true} text={'⌫'} textStyle={styles.buttonText} onPress={(e,i) => this.props.handleBackPress(e,0)} />
-    <WWButton width={{a:9,b:42}} showBorderLeft={true} showBorderTop={true} text={units[4]} textStyle={styles.buttonText} onPress={(e,i) => this.props.handleUnitPress(e,4)} />
-    <WWButton width={{a:0,b:42}} showBorderLeft={true} showBorderTop={true} showBorderRight={true} text={units[5]} textStyle={styles.buttonText} onPress={(e,i) => this.props.handleUnitPress(e,5)} />
-  </View>
-            
-      
-  <View style={[styles.buttonRow]}>
-      <WWButton width={{a:6,b:42}} showBorderLeft={true} showBorderTop={true} text={days[0]} textStyle={styles.buttonText} onPress={(e,i) => this.props.handleDayPress(e,0)} />
-      <WWButton width={{a:6,b:42}} showBorderLeft={true} showBorderTop={true} text={days[1]} textStyle={styles.buttonText} onPress={(e,i) => this.props.handleDayPress(e,1)} />
-      <WWButton width={{a:6,b:42}} showBorderLeft={true} showBorderTop={true} text={days[2]} textStyle={styles.buttonText} onPress={(e,i) => this.props.handleDayPress(e,2)} />
-      <WWButton width={{a:6,b:42}} showBorderLeft={true} showBorderTop={true} text={days[3]} textStyle={styles.buttonText} onPress={(e,i) => this.props.handleDayPress(e,3)} />
-      <WWButton width={{a:6,b:42}} showBorderLeft={true} showBorderTop={true} text={days[4]} textStyle={styles.buttonText} onPress={(e,i) => this.props.handleDayPress(e,4)} />
-      <WWButton width={{a:6,b:42}} showBorderLeft={true} showBorderTop={true} text={days[5]} textStyle={styles.buttonText} onPress={(e,i) => this.props.handleDayPress(e,5)} />
-      <WWButton width={{a:0,b:42}} showBorderLeft={true} showBorderTop={true} showBorderRight={true} text={days[6]} textStyle={styles.buttonText} onPress={(e,i) => this.props.handleDayPress(e,6)} />
+        <View style={[styles.buttonRow]}>
+          <WWButton width={{a:6,b:42}} showBorderLeft={true} showBorderTop={true} text={days[0]} textStyle={styles.buttonText} onPress={(e,i) => this.props.handleDayPress(e,0)} />
+          <WWButton width={{a:6,b:42}} showBorderLeft={true} showBorderTop={true} text={days[1]} textStyle={styles.buttonText} onPress={(e,i) => this.props.handleDayPress(e,1)} />
+          <WWButton width={{a:6,b:42}} showBorderLeft={true} showBorderTop={true} text={days[2]} textStyle={styles.buttonText} onPress={(e,i) => this.props.handleDayPress(e,2)} />
+          <WWButton width={{a:6,b:42}} showBorderLeft={true} showBorderTop={true} text={days[3]} textStyle={styles.buttonText} onPress={(e,i) => this.props.handleDayPress(e,3)} />
+          <WWButton width={{a:6,b:42}} showBorderLeft={true} showBorderTop={true} text={days[4]} textStyle={styles.buttonText} onPress={(e,i) => this.props.handleDayPress(e,4)} />
+          <WWButton width={{a:6,b:42}} showBorderLeft={true} showBorderTop={true} text={days[5]} textStyle={styles.buttonText} onPress={(e,i) => this.props.handleDayPress(e,5)} />
+          <WWButton width={{a:0,b:42}} showBorderLeft={true} showBorderTop={true} showBorderRight={true} text={days[6]} textStyle={styles.buttonText} onPress={(e,i) => this.props.handleDayPress(e,6)} />
+        </View>
 
-
-  
-      
-  </View>
-  <View style={[styles.buttonRow]}>
-    <WWButton width={{a:12,b:42}} showBorderLeft={true} showBorderTop={true} showBorderBottom={true} text={days[7]} textStyle={styles.buttonText} onPress={(e,i) => this.props.handleDayPress(e,7)} />
-    
-
-      <WWButton width={{a:6,b:42}} showBorderLeft={true} showBorderTop={true} showBorderBottom={true} image={require('./img/gearorange24x24.png')} text={'set'} textStyle={styles.buttonText} onPress={(e,i) => this.props.handleSettingsPress(e,0)} />
-      <WWButton width={{a:6,b:42}} showBorderLeft={true} showBorderTop={true} showBorderBottom={true} image={require('./img/infoorange24x24.png')} text={'info'} textStyle={styles.buttonText} onPress={(e,i) => this.props.handleInfoPress(e,0)} />
-
-
-      
-    <View style={styles.dateDisplay}>
-      <Text style={styles.dateDisplayText}>{this.props.prettyPrint()}</Text>
-    </View>
-      
-      
-      
-  </View>{/* last buttonrow */}
-
-</View>
-      
+        <View style={[styles.buttonRow]}>
+          <WWButton width={{a:12,b:42}} showBorderLeft={true} showBorderTop={true} showBorderBottom={true} text={days[7]} textStyle={styles.buttonText} onPress={(e,i) => this.props.handleDayPress(e,7)} />
+          <WWButton width={{a:6,b:42}} showBorderLeft={true} showBorderTop={true} showBorderBottom={true} image={require('./img/gearorange24x24.png')} text={'set'} textStyle={styles.buttonText} onPress={(e,i) => this.props.handleSettingsPress(e,0)} />
+          <WWButton width={{a:6,b:42}} showBorderLeft={true} showBorderTop={true} showBorderBottom={true} image={require('./img/infoorange24x24.png')} text={'info'} textStyle={styles.buttonText} onPress={(e,i) => this.props.handleInfoPress(e,0)} />
+          <View style={styles.dateDisplay}>
+            <Text style={styles.dateDisplayText}>{this.props.prettyPrint()}</Text>
+          </View>
+        </View>
+      </View>
     )
   }
 }
-
 
 class FadeInOut extends Component {
   props: {
