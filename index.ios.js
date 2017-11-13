@@ -1,8 +1,5 @@
 /* kvar att göra
 
-fixa klart insstructions
-bort med xxx
-
 ev i framtiden: förbättra isX med
 import DeviceInfo from 'react-native-device-info';
 // getModel: iPhone X
@@ -497,28 +494,28 @@ class InstructionsView extends React.Component {
           <Text><Text style={{fontWeight:'bold'}}>Enter the subject</Text> of your reminder, for example <Text style={{fontStyle:'italic'}}>Buy milk</Text>, <Text style={{fontStyle:'italic'}}>Renew cat insurance</Text> or <Text style={{fontStyle:'italic'}}>Cancel Showflix subscription</Text></Text>
         </View>
         <View style={{padding:0, backgroundColor:'rgba(191,183,120,0.5)'}}>
-          <Image resizeMode={'contain'} style={[instructionStyles.image,{height:140}]} source={require('./img/infoimg1.png')} />
+          <Image resizeMode={'contain'} style={[instructionStyles.image,{height:160}]} source={require('./img/infoimg1.png')} />
         </View>      
         <View style={{padding:10, backgroundColor:'rgba(191,183,120,0.55)'}}>
           <Text><Text style={{fontWeight:'bold'}}>Tap the buttons</Text> to schedule when in the future you want your reminder, for example <Text style={{fontStyle:'italic'}}>Tomorrow</Text>, on <Text style={{fontStyle:'italic'}}>Monday</Text>, or in <Text style={{fontStyle:'italic'}}>20 days</Text>. You can also tap <Text style={{fontStyle:'italic'}}>Custom</Text> to select any time and date. If no time is set, it defaults to 0 minutes (immediately)</Text>
         </View>
 
         <View style={{padding:0, backgroundColor:'rgba(191,183,120,0.60)'}}>
-          <Image resizeMode={'contain'} style={[instructionStyles.image,{height:140}]} source={require('./img/infoimg1.png')} />
+          <Image resizeMode={'contain'} style={[instructionStyles.image,{height:80}]} source={require('./img/infoimg2.png')} />
         </View>      
 
 
         <View style={{padding:10, backgroundColor:'rgba(191,183,120,0.65)'}}>
-          <Text><Text style={{fontWeight:'bold'}}>Tap </Text><Text style={{fontStyle:'italic',fontWeight:'bold'}}>follow up</Text> in the upper right corner or <Text style={{fontStyle:'italic',fontWeight:'bold'}}>send</Text> on the keyboard to schedule the reminder. xxx bara på tangentbord, följt av send</Text>
+          <Text><Text style={{fontWeight:'bold'}}>Tap </Text><Text style={{fontStyle:'italic',fontWeight:'bold'}}>When What</Text> in the upper right corner or <Text style={{fontStyle:'italic',fontWeight:'bold'}}>send</Text> on the keyboard to schedule the reminder, followed by <Text style={{fontStyle:'italic',fontWeight:'bold'}}>Send</Text> in the appearing Mail dialog. </Text>
         </View>
         <View style={{padding:10, backgroundColor:'rgba(191,183,120,0.70)'}}>
-      <Text><Text style={{fontWeight:'bold'}}>Finished!</Text> An email will remind you at the selected time. If it is the first time you use the service of Followupthen, you will get a welcome message that asks you to verify your email address. Please check your inbox for this welcome message and follow the verification instructions. You will also get a confirmation email for every reminder you schedule. These confirmations can be turned off at <Text style={{textDecorationLine:'underline'}} onPress={(e) => this.handleLinkPress(e,'https://www.followupthen.com')}>followupthen.com</Text></Text>
+      <Text><Text style={{fontWeight:'bold'}}>Finished!</Text> An email will remind you at the selected time. If it is the first time you use the service of Followupthen, you will get a welcome message that asks you to verify your email address. Please check your inbox for this welcome message and follow the verification instructions. You will also get a confirmation email for every reminder you schedule. These confirmations can be turned off at <Text style={{textDecorationLine:'underline'}} onPress={(e) => this.handleLinkPress(e,'https://www.followupthen.com')}>www.followupthen.com</Text></Text>
         </View>
         <View style={{padding:10, backgroundColor:'rgba(191,183,120,0.75)'}}>
           <Text>Detailed instructions and more information can be found at <Text style={{textDecorationLine:'underline'}} onPress={(e) => this.handleLinkPress(e,'http://asynkronix.se/whenwhat')}>Asynkronix</Text></Text>
         </View>
         <View style={{padding:10, backgroundColor:'rgba(191,183,120,0.80)'}}>
-          <Text>Please note that this app is in no way affiliated with followupthen, but it does require their excellent free service. Read more about them at <Text style={{textDecorationLine:'underline'}} onPress={(e) => this.handleLinkPress(e,'https://www.followupthen.com')}>followupthen.com</Text></Text>
+          <Text>Please note that this app is in no way affiliated with followupthen, but it does require their excellent free service. Read more about them at <Text style={{textDecorationLine:'underline'}} onPress={(e) => this.handleLinkPress(e,'https://www.followupthen.com')}>www.followupthen.com</Text></Text>
         </View>
       </ScrollView>
     )
